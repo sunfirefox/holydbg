@@ -10,6 +10,18 @@
 
 namespace hdbg {
 
+namespace {
+
+unsigned int reg_idx_to_dreg_offs(unsigned int reg_idx)
+{
+  const int dreg_offs = reg_idx - X64_RegDr0;
+  if(dreg_offs < 0 || dreg_offs > 3)
+    throw std::invalid_argument("invalid reg index");
+  return dreg_offs;
+}
+
+} // namespace
+
 X64_ArchInternals::X64_ArchInternals() = default;
 X64_ArchInternals::~X64_ArchInternals() = default;
 
@@ -32,12 +44,16 @@ const std::vector<unsigned int> & X64_ArchInternals::hw_bpx_reg_indexes() const
   return hw_bpx_regidx;
 }
 
+bool X64_ArchInternals::is_hw_bpx_reg_enabled(unsigned int reg_idx, const ThreadContext & thr_ctx) const
+{
+  const int dreg_offs = reg_idx_to_dreg_offs(reg_idx);
+  const DebugControlReg dreg_ctrl( thr_ctx.reg_value<std::uint32_t>(X64_RegDr7) );
+  return dreg_ctrl.is_local_hw_bp_enabled(dreg_offs);
+}
+
 void X64_ArchInternals::set_hw_bpx_enabled(unsigned int reg_idx, bool enabled, ThreadContext & thr_ctx) const
 {
-  const int dreg_offs = reg_idx - X64_RegDr0;
-  if(dreg_offs < 0 || dreg_offs > 3)
-    throw std::invalid_argument("invalid reg index");
-  
+  const int dreg_offs = reg_idx_to_dreg_offs(reg_idx);
   DebugControlReg dreg_ctrl( thr_ctx.reg_value<std::uint32_t>(X64_RegDr7) );
   dreg_ctrl.local_set_hw_bp_enabled(dreg_offs, enabled);
   if(enabled) {

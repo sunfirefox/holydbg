@@ -14,6 +14,7 @@ public:
   virtual std::unique_ptr<RawContext> make_raw_context() const override;
   virtual const std::vector<std::uint8_t> & sw_bpx_template() const override;
   virtual const std::vector<unsigned int> & hw_bpx_reg_indexes() const override;
+  virtual bool is_hw_bpx_reg_enabled(unsigned int reg_idx, const ThreadContext & thr_ctx) const override;
   virtual void set_hw_bpx_enabled(unsigned int reg_idx, bool enabled, ThreadContext & thr_ctx) const override;
 };
 

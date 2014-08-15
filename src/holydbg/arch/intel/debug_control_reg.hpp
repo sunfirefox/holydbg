@@ -22,10 +22,14 @@ public:
     bp_size_dword = 3,
   };
   
-  explicit DebugControlReg(std::uint32_t);
+  explicit constexpr DebugControlReg(std::uint32_t reg_value);
   
   void local_set_hw_bp_enabled(unsigned int dreg_offs, bool enable);
+  bool is_local_hw_bp_enabled(unsigned int dreg_offs) const;
+  
   void global_set_hw_bp_enabled(unsigned int dreg_offs, bool enable);
+  bool is_global_hw_bp_enabled(unsigned int dreg_offs) const;
+  
   void set_hw_bp_break_on(unsigned int dreg_offs, break_on brkon);
   void set_hw_bp_size(unsigned int dreg_offs, bp_size size);
   
@@ -34,6 +38,15 @@ public:
 private:
   std::uint32_t value_;
 };
+
+constexpr DebugControlReg::DebugControlReg(std::uint32_t reg_value)
+  : value_( reg_value ) {}
+
+inline
+std::uint32_t DebugControlReg::value() const
+{
+  return value_;
+}
 
 } // namespace hdbg
 
