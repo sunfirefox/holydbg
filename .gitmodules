@@ -1,3 +1,4 @@
 [submodule "distorm"]
 	path = distorm
 	url = git@github.com:alex94puchades/distorm.git
+	ignore = dirty
