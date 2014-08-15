@@ -33,12 +33,12 @@ SwBreakpoint::~SwBreakpoint() = default;
 void SwBreakpoint::setup(Debuggee & debuggee)
 {
   auto& dbg_proc = debuggee.process();
-  auto& arch_internl = process_arch_services(dbg_proc).get_internals();
-  auto& arch_bpx = arch_internl.sw_bpx_template();
-  ov_data_.resize(arch_bpx.size());
+  auto& arch_internals = process_arch_services(dbg_proc).get_internals();
+  auto& sw_bpx = arch_internals.sw_bpx_template();
+  ov_data_.resize(sw_bpx.size());
   
   dbg_proc.read_mem(addr_, ov_data_.size(), ov_data_.data());
-  dbg_proc.write_mem(addr_, arch_bpx.size(), arch_bpx.data());
+  dbg_proc.write_mem(addr_, sw_bpx.size(), sw_bpx.data());
 }
 
 void SwBreakpoint::cleanup(Debuggee & debuggee)
@@ -49,11 +49,7 @@ void SwBreakpoint::cleanup(Debuggee & debuggee)
 
 bool SwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_ctx) const
 {
-  // TODO: ip points before or after int3 instruction ???
-  //  - linux: after
-  //  - windows: ??
-  auto& dbg_proc = dbg_thr.process();
-  auto& arch_svc = process_arch_services(dbg_proc);
+  auto& arch_svc = process_arch_services( dbg_thr.process() );
   const auto ip_idx = arch_svc.reg_index("inst-ptr");
   const auto thr_ip = thr_ctx.reg_value<std::uintptr_t>(ip_idx);
   return thr_ip - ov_data_.size() == addr_;
@@ -61,8 +57,7 @@ bool SwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_
 
 void SwBreakpoint::rewind(DebugThread & dbg_thr, ThreadContext & thr_ctx) const
 {
-  auto& dbg_proc = dbg_thr.process();
-  auto& arch_svc = process_arch_services(dbg_proc);
+  auto& arch_svc = process_arch_services( dbg_thr.process() );
   const int ip_idx = arch_svc.reg_index("inst-ptr");
   const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx);
   thr_ctx.set_reg(ip_idx, ip_at - ov_data_.size());
