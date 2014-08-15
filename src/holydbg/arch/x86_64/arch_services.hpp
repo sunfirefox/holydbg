@@ -11,7 +11,7 @@ public:
   X64_ArchServices();
   virtual ~X64_ArchServices();
   
-  virtual int reg_index(const char * reg_desc) const override;
+  virtual unsigned int reg_index(const char * reg_tag) const override;
   virtual ArchInternals & get_internals() const override;
 };
 

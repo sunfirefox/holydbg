@@ -11,7 +11,7 @@ class HDBG_EXPORT ArchServices
 {
 public:
   virtual ~ArchServices() = default;
-  virtual int reg_index(const char * reg_desc) const = 0;
+  virtual unsigned int reg_index(const char * reg_tag) const = 0;
   virtual ArchInternals & get_internals() const = 0;
 };
 

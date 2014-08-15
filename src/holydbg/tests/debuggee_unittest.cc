@@ -54,7 +54,6 @@ TEST(DebuggeeTest, SetSwBpx) {
       EXPECT_EQ(&dbg_proc, &dbg_thr.process());
       auto& arch_svc = process_arch_services(dbg_proc);
       const auto ip_idx = arch_svc.reg_index("inst-ptr");
-      ASSERT_NE(-1, ip_idx);
       const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx);
       EXPECT_EQ(entry_pt, ip_at);
     });

@@ -8,7 +8,8 @@
 
 namespace hdbg {
 
-class HDBG_EXPORT SwBreakpoint final : public Breakpoint
+class HDBG_EXPORT SwBreakpoint final :
+  public Breakpoint
 {
 public:
   SwBreakpoint(std::uintptr_t addr);

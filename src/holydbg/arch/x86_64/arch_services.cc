@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <utility>
+#include <stdexcept>
 
 namespace hdbg {
 
@@ -13,7 +14,7 @@ X64_ArchServices x64_services;
 X64_ArchServices::X64_ArchServices() = default;
 X64_ArchServices::~X64_ArchServices() = default;
 
-int X64_ArchServices::reg_index(const char * reg_desc) const
+unsigned int X64_ArchServices::reg_index(const char * reg_tag) const
 {
   static const std::pair<const char *, unsigned int> reg_idx_table[] = {
     std::make_pair("inst-ptr",  X64_RegRip),
@@ -22,10 +23,9 @@ int X64_ArchServices::reg_index(const char * reg_desc) const
   };
   
   for(const auto& reg_idx_e : reg_idx_table) {
-    if(!std::strcmp(reg_desc, reg_idx_e.first))
+    if(!std::strcmp(reg_tag, reg_idx_e.first))
       return reg_idx_e.second;
-  }
-  return -1;
+  } throw std::invalid_argument("unknown reg tag");
 }
 
 ArchInternals & X64_ArchServices::get_internals() const
