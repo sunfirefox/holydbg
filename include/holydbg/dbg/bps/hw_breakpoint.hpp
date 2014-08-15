@@ -45,7 +45,7 @@ private:
   
   std::uintptr_t addr_;
   std::unordered_map<thread_id, unsigned int> bp_regs_;
-  std::shared_ptr<HwBpxDbgEvtListener> dbgevt_listener_;
+  std::shared_ptr<HwBpxDbgEvtListener> evt_listener_;
   ThreadContext thr_ctx_;
 };
 

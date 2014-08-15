@@ -65,38 +65,36 @@ TEST_F(DebuggeeTest, DbgExecRun) {
 }
 
 TEST_F(DebuggeeTest, SetSwBpx) {
-  bool bp_hit = false;
+  unsigned int bp_hits = 0;
   const hdbg::breakpoint_id bpx_id = debuggee_->set_bp(new hdbg::SwBreakpoint(entry_pt_),
-    [this, &bpx_id, &bp_hit](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
-                             hdbg::ThreadContext & thr_ctx, hdbg::breakpoint_id bp_id)
+    [this, &bpx_id, &bp_hits](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
+                              hdbg::ThreadContext & thr_ctx, hdbg::breakpoint_id bp_id)
     {
       EXPECT_EQ(bpx_id, bp_id);
       auto& dbg_proc = debuggee.process();
       EXPECT_EQ(&dbg_proc, &dbg_proc_);
       const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx_);
       EXPECT_EQ(entry_pt_, ip_at);
-      bp_hit = true;
+      ++bp_hits;
     });
-  
   debuggee_->run();
-  ASSERT_TRUE(bp_hit);
+  ASSERT_EQ(1, bp_hits);
 }
 
 TEST_F(DebuggeeTest, SetHwBpx) {
-  bool bp_hit = false;
+  unsigned int bp_hits = 0;
   const hdbg::breakpoint_id bpx_id = debuggee_->set_bp(new hdbg::HwBreakpoint(entry_pt_),
-    [this, &bpx_id, &bp_hit](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
-                             hdbg::ThreadContext & thr_ctx, hdbg::breakpoint_id bp_id)
+    [this, &bpx_id, &bp_hits](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
+                              hdbg::ThreadContext & thr_ctx, hdbg::breakpoint_id bp_id)
     {
       EXPECT_EQ(bpx_id, bp_id);
       auto& dbg_proc = debuggee.process();
       EXPECT_EQ(&dbg_proc, &dbg_proc_);
       const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx_);
       EXPECT_EQ(entry_pt_, ip_at);
-      bp_hit = true;
+      ++bp_hits;
     });
-  
   debuggee_->run();
-  ASSERT_TRUE(bp_hit);
+  ASSERT_EQ(1, bp_hits);
 }
 

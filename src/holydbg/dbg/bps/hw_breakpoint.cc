@@ -10,7 +10,8 @@
 
 #include "../../arch/arch_internals.hpp"
 
-#include <algorithm>
+#include <cstdint>
+#include <stdexcept>
 
 namespace hdbg {
 
@@ -42,7 +43,7 @@ void HwBreakpoint::HwBpxDbgEvtListener::handle_event(const ThreadExitedEvent & d
 
 HwBreakpoint::HwBreakpoint(std::uintptr_t addr)
   : addr_( addr )
-  , dbgevt_listener_( std::make_shared<HwBpxDbgEvtListener>(*this) ) {}
+  , evt_listener_( std::make_shared<HwBpxDbgEvtListener>(*this) ) {}
 
 HwBreakpoint::~HwBreakpoint() = default;
 
@@ -81,9 +82,10 @@ void HwBreakpoint::set_on_thread(DebugThread & dbg_thr)
       arch_internals.set_hw_bpx_enabled(reg_idx, true, thr_ctx_);
       dbg_thr.set_context(thr_ctx_);
       bp_regs_[ dbg_thr.id() ] = reg_idx;
-      break;
+      return;
     }
   }
+  throw std::runtime_error("no debug register available for hw_bpx");
 }
 
 void HwBreakpoint::remove_from_thread(DebugThread & dbg_thr)
