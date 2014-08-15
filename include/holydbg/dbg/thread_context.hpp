@@ -26,8 +26,7 @@ class HDBG_EXPORT ThreadContext
   template <typename T>
   static constexpr bool is_valid_reg_value()
   {
-    return std::is_integral<T>::value &&
-           std::is_unsigned<T>::value ;
+    return std::is_integral<T>::value;
   }
   
 public:
@@ -36,11 +35,8 @@ public:
   ThreadContext(ThreadContext &&);
   ~ThreadContext();
   
-  template <typename T> // TODO: remove
-  T reg_value(unsigned int reg_idx) const;
-  
   template <typename T>
-  T get_reg(unsigned int reg_idx) const;
+  T reg_value(unsigned int reg_idx) const;
   
   template <typename T> 
   void set_reg(unsigned int reg_idx, const T & value);
@@ -71,12 +67,6 @@ T ThreadContext::reg_value(unsigned int reg_idx) const
   std::memcpy(buf.data(), raddr_p.first, raddr_p.second);
 #endif // HOLYDBG_BE_ENDIAN
   return native_load<T>(buf.data());
-}
-
-template <typename T> inline
-T ThreadContext::get_reg(unsigned int reg_idx) const
-{
-  return reg_value<T>(reg_idx);
 }
 
 template <typename T>
