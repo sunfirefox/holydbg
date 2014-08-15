@@ -1,10 +1,10 @@
-#include "../../../../arch/x86_64/raw_context.hpp"
+#include "../../../../../arch/intel/x86_64/raw_context.hpp"
 
 #include <holydbg/dbg/thread_context.hpp>
 #include <holydbg/dbg/local/debug_thread.hpp>
 
-#include "../../../../arch/x86_64/arch_services.hpp"
-#include "../../../../arch/x86_64/reg_ids.hpp"
+#include "../../../../../arch/intel/x86_64/arch_services.hpp"
+#include "../../../../../arch/intel/x86_64/reg_ids.hpp"
 
 #include <sys/ptrace.h>
 

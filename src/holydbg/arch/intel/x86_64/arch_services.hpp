@@ -1,5 +1,5 @@
-#ifndef __HOLYDBG_SRC_ARCH_X86_64_ARCH_SERVICES_HPP__
-#define __HOLYDBG_SRC_ARCH_X86_64_ARCH_SERVICES_HPP__
+#ifndef __HOLYDBG_SRC_ARCH_INTEL_X86_64_ARCH_SERVICES_HPP__
+#define __HOLYDBG_SRC_ARCH_INTEL_X86_64_ARCH_SERVICES_HPP__
 
 #include <holydbg/arch_services.hpp>
 
@@ -19,4 +19,4 @@ extern X64_ArchServices x64_services;
 
 } // namespace hdbg
 
-#endif // __HOLYDBG_SRC_ARCH_X86_64_ARCH_SERVICES_HPP__
+#endif // __HOLYDBG_SRC_ARCH_INTEL_X86_64_ARCH_SERVICES_HPP__

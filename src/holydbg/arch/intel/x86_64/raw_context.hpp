@@ -1,5 +1,5 @@
-#ifndef __HOLYDBG_SRC_ARCH_X86_64_RAW_CONTEXT_HPP__
-#define __HOLYDBG_SRC_ARCH_X86_64_RAW_CONTEXT_HPP__
+#ifndef __HOLYDBG_SRC_ARCH_INTEL_X86_64_RAW_CONTEXT_HPP__
+#define __HOLYDBG_SRC_ARCH_INTEL_X86_64_RAW_CONTEXT_HPP__
 
 #include <holydbg/arch/raw_context.hpp>
 
@@ -103,4 +103,4 @@ private:
 
 } // namespace hdbg
 
-#endif // __HOLYDBG_SRC_ARCH_X86_64_RAW_CONTEXT_HPP__
+#endif // __HOLYDBG_SRC_ARCH_INTEL_X86_64_RAW_CONTEXT_HPP__

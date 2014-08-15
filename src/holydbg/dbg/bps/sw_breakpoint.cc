@@ -34,11 +34,11 @@ void SwBreakpoint::setup(Debuggee & debuggee)
 {
   auto& dbg_proc = debuggee.process();
   auto& arch_internl = process_arch_services(dbg_proc).get_internals();
-  auto& arch_bp = arch_internl.sw_bp_template();
-  ov_data_.resize(arch_bp.size());
+  auto& arch_bpx = arch_internl.sw_bpx_template();
+  ov_data_.resize(arch_bpx.size());
   
   dbg_proc.read_mem(addr_, ov_data_.size(), ov_data_.data());
-  dbg_proc.write_mem(addr_, arch_bp.size(), arch_bp.data());
+  dbg_proc.write_mem(addr_, arch_bpx.size(), arch_bpx.data());
 }
 
 void SwBreakpoint::cleanup(Debuggee & debuggee)

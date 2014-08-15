@@ -1,6 +1,6 @@
 #include <holydbg/arch_services.hpp>
 
-#include "x86_64/arch_services.hpp"
+#include "intel/x86_64/arch_services.hpp"
 
 #include <cstring>
 #include <utility>
