@@ -6,7 +6,7 @@
 #include <holydbg/arch/raw_context.hpp>
 
 #include <algorithm>
-#include <cmath>
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -58,13 +58,14 @@ T ThreadContext::reg_value(unsigned int reg_idx) const
     throw std::out_of_range("invalid reg index");
   
   const auto raddr_p = raw_ctx_->reg_addr(reg_idx);
-  std::vector<std::uint8_t> buf( std::min(raddr_p.second, sizeof(T)), 0 );
+  std::vector<std::uint8_t> buf( std::max(raddr_p.second, sizeof(T)), 0 );
 #ifdef HOLYDBG_BE_ENDIAN
   const auto rbytes = reinterpret_cast<const std::uint8_t *>(raddr_p.first);
-  const unsigned int disp = std::abs(buf.size() - sizeof(T));
-  std::memcpy(buf.data(), rbytes + disp, buf.size());
+  const int disp = buf.size() - sizeof(T);
+  assert( disp > 0 );
+  std::memcpy(buf.data(), rbytes + disp, raddr_p.second);
 #else  // HOLYDBG_BE_ENDIAN
-  std::memcpy(buf.data(), raddr_p.first, buf.size());
+  std::memcpy(buf.data(), raddr_p.first, raddr_p.second);
 #endif // HOLYDBG_BE_ENDIAN
   return native_load<T>(buf.data());
 }
@@ -79,10 +80,11 @@ void ThreadContext::set_reg(unsigned int reg_idx, const T & value)
     std::vector<std::uint8_t> buf( std::max(raddr_p.second, sizeof(T)), 0 );
 #ifdef HOLYDBG_BE_ENDIAN
     const auto vbytes = reinterpret_cast<std::uint8_t *>(buf.data());
-    const unsigned int disp = std::abs(raddr_p.second - sizeof(T));
-    native_store(vbytes + disp, value);
+    const int disp = buf.size() - sizeof(T);
+    assert( disp > 0 );
+    be_store(vbytes + disp, value);
 #else  // HOLYDBG_BE_ENDIAN
-    native_store(buf.data(), value);
+    le_store(buf.data(), value);
 #endif // HOLYDBG_BE_ENDIAN
     std::memcpy(raddr_p.first, buf.data(), raddr_p.second);
   }
