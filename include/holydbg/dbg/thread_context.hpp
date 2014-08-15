@@ -83,10 +83,11 @@ void ThreadContext::set_reg(unsigned int reg_idx, const T & value)
     const int disp = buf.size() - sizeof(T);
     assert( disp > 0 );
     be_store(vbytes + disp, value);
+    std::memcpy(raddr_p.first, vbytes + disp, raddr_p.second);
 #else  // HOLYDBG_BE_ENDIAN
     le_store(buf.data(), value);
-#endif // HOLYDBG_BE_ENDIAN
     std::memcpy(raddr_p.first, buf.data(), raddr_p.second);
+#endif // HOLYDBG_BE_ENDIAN
   }
 }
 
