@@ -34,7 +34,7 @@ void SwBreakpoint::setup(Debuggee & debuggee)
 {
   auto& dbg_proc = debuggee.process();
   auto& arch_internl = process_arch_services(dbg_proc).get_internals();
-  auto& arch_bp = arch_internl.make_sw_bp();
+  auto& arch_bp = arch_internl.sw_bp_template();
   ov_data_.resize(arch_bp.size());
   
   dbg_proc.read_mem(addr_, ov_data_.size(), ov_data_.data());
