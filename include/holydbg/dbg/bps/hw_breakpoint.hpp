@@ -43,8 +43,14 @@ private:
   void set_on_thread(DebugThread &);
   void remove_from_thread(DebugThread &);
   
+  struct HwBpxData
+  {
+    unsigned int dreg_idx;
+    std::uintptr_t ov_dreg_val;
+  };
+  
   std::uintptr_t addr_;
-  std::unordered_map<thread_id, unsigned int> bp_regs_;
+  std::unordered_map<thread_id, HwBpxData> bp_regs_;
   std::shared_ptr<HwBpxDbgEvtListener> evt_listener_;
   ThreadContext thr_ctx_;
 };

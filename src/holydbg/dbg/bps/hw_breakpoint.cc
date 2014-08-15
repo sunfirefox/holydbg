@@ -10,7 +10,6 @@
 
 #include "../../arch/arch_internals.hpp"
 
-#include <cstdint>
 #include <stdexcept>
 
 namespace hdbg {
@@ -68,7 +67,7 @@ bool HwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_
   return thr_ctx.reg_value<std::uintptr_t>(ip_idx) == addr_;
 }
 
-void HwBreakpoint::rewind(DebugThread & dbg_thr, ThreadContext & thr_ctx) const {}
+void HwBreakpoint::rewind(DebugThread & , ThreadContext & ) const {}
 
 void HwBreakpoint::set_on_thread(DebugThread & dbg_thr)
 {
@@ -78,10 +77,11 @@ void HwBreakpoint::set_on_thread(DebugThread & dbg_thr)
   dbg_thr.get_context(thr_ctx_);
   for(auto reg_idx : hw_bpx_regidx) {
     if(!arch_internals.is_hw_bpx_reg_enabled(reg_idx, thr_ctx_)) {
+      const auto ov_dreg_val = thr_ctx_.reg_value<std::uintptr_t>(reg_idx);
       thr_ctx_.set_reg(reg_idx, addr_);
       arch_internals.set_hw_bpx_enabled(reg_idx, true, thr_ctx_);
       dbg_thr.set_context(thr_ctx_);
-      bp_regs_[ dbg_thr.id() ] = reg_idx;
+      bp_regs_[ dbg_thr.id() ] = HwBpxData{ reg_idx, ov_dreg_val };
       return;
     }
   }
@@ -95,8 +95,8 @@ void HwBreakpoint::remove_from_thread(DebugThread & dbg_thr)
     auto& arch_svc = process_arch_services( dbg_thr.process() );
     auto& arch_internals = arch_svc.get_internals();
     dbg_thr.get_context(thr_ctx_);
-    thr_ctx_.set_reg(bpr_itr->second, 0);
-    arch_internals.set_hw_bpx_enabled(bpr_itr->second, false, thr_ctx_);
+    thr_ctx_.set_reg(bpr_itr->second.dreg_idx, bpr_itr->second.ov_dreg_val);
+    arch_internals.set_hw_bpx_enabled(bpr_itr->second.dreg_idx, false, thr_ctx_);
     dbg_thr.set_context(thr_ctx_);
     bp_regs_.erase(bpr_itr);
   }
