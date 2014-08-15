@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(holydbg)
-set(holydbg_VERSION 0x000100)
+set(holydbg_VERSION 0x000200)
 
 option(LIBHDBG_STATIC "Build libhdbg as a static library" OFF)
 option(HOLYDBG_BUILD_TESTS "Build holydbg tests" ON)
