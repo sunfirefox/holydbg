@@ -1,12 +1,21 @@
 #ifndef __HDBG_CONFIG_H__
 #define __HDBG_CONFIG_H__
 
-#define HOLYDBG_MAKE_VERSION(major, minor, patch) ((major) << 16 | \
-                                                   (minor) <<  8 | \
-                                                   (patch) <<  0 )
+#define HOLYDBG_MAKE_VERSION(major, minor, patch) (((major) & 0xff) << 16 | \
+                                                   ((minor) & 0xff) <<  8 | \
+                                                   ((patch) & 0xff) <<  0 )
 
-#define HDBG_VERSION    HOLYDBG_MAKE_VERSION(0,2,0)
-#define HOLYDBG_VERSION HOLYDBG_MAKE_VERSION(0,0,0)
+#define HOLYDBG_VERSION_MAJOR(version) (((version) >> 16) & 0xff)
+#define HOLYDBG_VERSION_MINOR(version) (((version) >>  8) & 0xff)
+#define HOLYDBG_VERSION_PATCH(version) (((version) >>  0) & 0xff)
+
+#define LIBHDBG_VERSION HOLYDBG_MAKE_VERSION( @LIBHDBG_VERSION_MAJOR@ , \
+                                              @LIBHDBG_VERSION_MINOR@ , \
+                                              @LIBHDBG_VERSION_PATCH@ )
+
+#define HOLYDBG_VERSION HOLYDBG_MAKE_VERSION( @HOLYDBG_VERSION_MAJOR@ , \
+                                              @HOLYDBG_VERSION_MINOR@ , \
+                                              @HOLYDBG_VERSION_PATCH@ )
 
 #cmakedefine HOLYDBG_OS_WINDOWS
 #cmakedefine HOLYDBG_OS_LINUX

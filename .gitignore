@@ -17,4 +17,4 @@
 tests/**
 build/**
 
-include/holydbg/config.h
+include/hdbg/config.h
