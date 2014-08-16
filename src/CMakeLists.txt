@@ -1,1 +1,1 @@
-add_subdirectory(holydbg)
+add_subdirectory(hdbg)

@@ -8,22 +8,22 @@
 #define HDBG_VERSION    HOLYDBG_MAKE_VERSION(0,2,0)
 #define HOLYDBG_VERSION HOLYDBG_MAKE_VERSION(0,0,0)
 
-#cmakedefine HOLYDBG_OS_WINDOWS
-#cmakedefine HOLYDBG_OS_LINUX
-#cmakedefine HOLYDBG_OS_OSX
+/* #undef HOLYDBG_OS_WINDOWS */
+#define HOLYDBG_OS_LINUX
+/* #undef HOLYDBG_OS_OSX */
 
-#cmakedefine HOLYDBG_ARCH_X86_64
-#cmakedefine HOLYDBG_ARCH_X86
+#define HOLYDBG_ARCH_X86_64
+/* #undef HOLYDBG_ARCH_X86 */
 
-#cmakedefine HOLYDBG_ENDIAN_BE
+/* #undef HOLYDBG_ENDIAN_BE */
 
-#cmakedefine HOLYDBG_CXX_MSVC
-#cmakedefine HOLYDBG_CXX_GNU
-#cmakedefine HOLYDBG_CXX_CLANG
-#cmakedefine HOLYDBG_CXX_UNKNOWN
+/* #undef HOLYDBG_CXX_MSVC */
+/* #undef HOLYDBG_CXX_GNU */
+#define HOLYDBG_CXX_CLANG
+/* #undef HOLYDBG_CXX_UNKNOWN */
 
-#cmakedefine LIBHDBG_STATIC
-#cmakedefine hdbg_EXPORTS
+#define LIBHDBG_STATIC
+/* #undef hdbg_EXPORTS */
 
 #if defined( HOLYDBG_CXX_MSVC )
 #  define HOLYDBG_DLLEXPORT __declspec(dllexport)
