@@ -14,13 +14,14 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <unordered_map>
 #include <utility>
 #include <sstream>
 #include <string>
 #include <system_error>
-#include <vector>
 
 namespace hdbg {
 
@@ -70,40 +71,44 @@ std::string make_env_var(const std::string & var, const std::string & value)
 
 struct LocalDebuggee::Impl
 {
+  struct DbgThreadData
+  {
+    LocalDebugThread dbg_thr;
+    bool stopped;
+    unsigned long sig_deliv;
+  };
+  
+  typedef std::pair<const thread_id, DbgThreadData> DbgThreadEntry;
+  
   struct DebugEventInternal
   {
-    pid_t wtid;
-    int status;
+    DbgThreadEntry * thr_entry;
+    int thr_status;
   };
   
   Impl(Debuggee & self, LocalDebugProcess && proc, int dbg_flags);
   
-  LocalDebugThread & attach_new_thread(thread_id);
-  LocalDebugThread & add_traced_thread(thread_id);
+  LocalDebugThread & attach_new_thread(thread_id tid);
+  LocalDebugThread & add_traced_thread(thread_id tid);
+  void stop_all_threads();
   
-  LocalDebugThread & get_thread(thread_id);
-  
-  void wait_event(DebugEventInternal * dbg_evt = nullptr);
-  void wait_event(pid_t wpid, DebugEventInternal * dbg_evt = nullptr);
+  void wait_event(DebugEventInternal & evt);
+  void wait_event(pid_t wpid, DebugEventInternal & evt);
   void dispatch_event(LocalDebuggee & self, const DebugEventInternal & dbg_evt);
   
   LocalDebugProcess process_;
-  std::vector<LocalDebugThread> threads_;
+  std::unordered_map<thread_id, DbgThreadData> threads_;
   bool attached_;
-  unsigned long sig_deliv_;
   bool evt_ign_;
   
 private:
-  typedef typename std::vector<LocalDebugThread>::iterator thread_iterator;
-  thread_iterator find_thread(thread_id);
-  
-  void on_process_created(LocalDebuggee & self, thread_id which, process_id new_pid);
+  void on_process_created(LocalDebuggee & self, DbgThreadEntry & thr_e, process_id new_pid);
   void on_process_exited(LocalDebuggee & self, int exit_code);
   void on_process_killed(LocalDebuggee & self, int term_sig);
-  void on_thread_created(LocalDebuggee & self, thread_id which, thread_id new_tid);
-  void on_thread_exited(LocalDebuggee & self, thread_id which, int exit_code);
-  void on_sig_trap(LocalDebuggee & self, thread_id which, const siginfo_t & si);
-  void on_signal(LocalDebuggee & self, thread_id which, const siginfo_t & si);
+  void on_thread_created(LocalDebuggee & self, DbgThreadEntry & thr_e, thread_id new_tid);
+  void on_thread_exited(LocalDebuggee & self, DbgThreadEntry & thr_e, int exit_code);
+  void on_sig_trap(LocalDebuggee & self, DbgThreadEntry & thr_e, const siginfo_t & si);
+  void on_signal(LocalDebuggee & self, DbgThreadEntry & thr_e, const siginfo_t & si);
   
   void notify_process_created(LocalDebuggee & self, LocalDebugThread & which, process_id new_pid);
   void notify_process_exited(LocalDebuggee & self, int exit_code);
@@ -121,8 +126,6 @@ LocalDebuggee::Impl::Impl(Debuggee & self, LocalDebugProcess && proc, int dbg_fl
   : process_( std::move(proc) )
   , trace_opts_( translate_debug_flags(dbg_flags) )
   , attached_( true )
-  , sig_deliv_( 0 )
-  , evt_ign_( false )
 {
   for(const auto& thr_e : enum_threads( process_.id() )) {
     if(thr_e.tid == process_.id())
@@ -137,9 +140,10 @@ LocalDebuggee::Impl::Impl(Debuggee & self, LocalDebugProcess && proc, int dbg_fl
 
 LocalDebugThread & LocalDebuggee::Impl::add_traced_thread(thread_id tid)
 {
-  hdbg::LocalDebugThread dbg_thr(process_, tid, DebugThread::OpenFlags::AllAccess);
-  threads_.emplace_back( std::move(dbg_thr) );
-  return threads_.back();
+  hdbg::LocalDebugThread w_dbg_thr(process_, tid, DebugThread::OpenFlags::AllAccess);
+  DbgThreadData thr_data { std::move(w_dbg_thr), true, 0 };
+  const auto ins_p = threads_.emplace(tid, std::move(thr_data));
+  return ins_p.first->second.dbg_thr;
 }
 
 LocalDebugThread & LocalDebuggee::Impl::attach_new_thread(thread_id tid)
@@ -147,91 +151,92 @@ LocalDebugThread & LocalDebuggee::Impl::attach_new_thread(thread_id tid)
   if(::ptrace(PTRACE_ATTACH, tid, nullptr, nullptr) == -1)
     throw std::system_error(errno, std::system_category());
   
-  if(::waitpid(tid, nullptr, __WALL) == -1)
+  int status;
+  if(::waitpid(tid, &status, __WALL) == -1)
     throw std::system_error(errno, std::system_category());
   
   return add_traced_thread(tid);
 }
 
-LocalDebugThread & LocalDebuggee::Impl::get_thread(thread_id tid)
+void LocalDebuggee::Impl::stop_all_threads()
 {
-  const auto thr_itr = find_thread(tid);
-  if(thr_itr == threads_.end())
-    throw std::invalid_argument("unknown thread");
-  return *thr_itr;
+  for(auto& thr_e : threads_) {
+    if(!thr_e.second.stopped)
+      tgkill(process_.id(), thr_e.first, SIGSTOP);
+  }
 }
 
-void LocalDebuggee::Impl::wait_event(DebugEventInternal * evt)
+void LocalDebuggee::Impl::wait_event(DebugEventInternal & evt)
 {
   for(;;) {
-    for(const auto& dbg_thr : threads_) {
+    for(auto& thr_e : threads_) {
       int status;
-      const pid_t wtid = ::waitpid(dbg_thr.id(), &status, __WALL | WNOHANG);
+      const pid_t wtid = ::waitpid(thr_e.first, &status, __WALL | WNOHANG);
       if(wtid == -1)
         throw std::system_error(errno, std::system_category());
       
       if(wtid != 0) {
-        if(evt) {
-          evt->wtid = wtid;
-          evt->status = status;
-        }
+        thr_e.second.stopped = WIFSTOPPED(status);
+        evt.thr_entry = &thr_e;
+        evt.thr_status = status;
         return;
       }
     }
   }
 }
 
-void LocalDebuggee::Impl::wait_event(pid_t wpid, DebugEventInternal * evt)
+void LocalDebuggee::Impl::wait_event(pid_t wpid, DebugEventInternal & evt)
 {
   int status;
   const pid_t wtid = ::waitpid(wpid, &status, __WALL);
   if(wtid == -1)
     throw std::system_error(errno, std::system_category());
   
-  if(evt) {
-    evt->wtid = wtid;
-    evt->status = status;
-  }
+  const auto thr_itr = threads_.find(wtid);
+  thr_itr->second.stopped = WIFSTOPPED(status);
+  evt.thr_entry = &*thr_itr;
+  evt.thr_status = status;
 }
 
 void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
                                          const DebugEventInternal & evt)
 {
-  const pid_t wtid = evt.wtid;
-  const int status = evt.status;
+  const pid_t wtid = evt.thr_entry->first;
+  const int status = evt.thr_status;
   
   evt_ign_ = false;
-  sig_deliv_ = 0;
   if(WIFSTOPPED(status)) {
     std::cerr << "-> stopped (sig = " << WSTOPSIG(status) << ")" << std::endl;
     const int wstopsig = WSTOPSIG(status);
+    auto& thr_e = *evt.thr_entry;
+    stop_all_threads();
     if(wstopsig == SIGTRAP) {
       std::cerr << "[*] trapped" << std::endl;
       switch(status >> 8) {
         case SIGTRAP | (PTRACE_EVENT_CLONE << 8): {
           std::cerr << "[*] event_clone" << std::endl;
           const pid_t new_thr_id = ptrace_geteventmsg(wtid);
-          on_thread_created(self, wtid, new_thr_id);
+          on_thread_created(self, thr_e, new_thr_id);
         } break;
         
         case SIGTRAP | (PTRACE_EVENT_EXIT  << 8): {
           const int exit_code = ptrace_geteventmsg(wtid);
           std::cerr << "[*] event_exit (tid = " << wtid 
                     << ", code = " << exit_code << ")" << std::endl;
-          on_thread_exited(self, wtid, exit_code);
+          on_thread_exited(self, thr_e, exit_code);
         } break;
         
         case SIGTRAP | (PTRACE_EVENT_FORK  << 8):
         case SIGTRAP | (PTRACE_EVENT_VFORK << 8): {
           std::cerr << "[*] event_xfork" << std::endl;
           const pid_t new_pid = ptrace_geteventmsg(wtid);
-          on_process_created(self, wtid, new_pid);
+          on_process_created(self, thr_e, new_pid);
         } break;
         
         default: {
           siginfo_t si;
           ptrace_getsiginfo(wtid, si);
-          on_sig_trap(self, wtid, si);
+          on_sig_trap(self, thr_e, si);
           break;
         }
       }
@@ -239,7 +244,7 @@ void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
       std::cerr << "[*] sig != SIGTRAP" << std::endl;
       siginfo_t si;
       ptrace_getsiginfo(wtid, si);
-      on_signal(self, wtid, si);
+      on_signal(self, thr_e, si);
     }
   } else if(WIFEXITED(status)) {
     std::cerr << "-> exited" << std::endl;
@@ -252,17 +257,13 @@ void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
   }
 }
 
-LocalDebuggee::Impl::thread_iterator LocalDebuggee::Impl::find_thread(thread_id tid)
-{
-  return std::find_if(threads_.begin(), threads_.end(),
-    [tid](const LocalDebugThread & thr) { return thr.id() == tid; });
-}
-
-void LocalDebuggee::Impl::on_process_created(LocalDebuggee & self, thread_id which,
+void LocalDebuggee::Impl::on_process_created(LocalDebuggee & self,
+                                             DbgThreadEntry & thr_e,
                                              process_id new_pid)
 {
-  auto& thr_which = get_thread(which);
+  auto& thr_which = thr_e.second.dbg_thr;
   notify_process_created(self, thr_which, new_pid);
+  
   if(::ptrace(PTRACE_DETACH, new_pid, nullptr, nullptr) == -1)
     throw std::system_error(errno, std::system_category());
 }
@@ -279,34 +280,36 @@ void LocalDebuggee::Impl::on_process_killed(LocalDebuggee & self, int sig)
   attached_ = false;
 }
 
-void LocalDebuggee::Impl::on_thread_created(LocalDebuggee & self, thread_id which,
+void LocalDebuggee::Impl::on_thread_created(LocalDebuggee & self,
+                                            DbgThreadEntry & thr_e,
                                             thread_id new_tid)
 {
-  if(::waitpid(new_tid, nullptr, __WALL) == -1)
+  int status;
+  if(::waitpid(new_tid, &status, __WALL) == -1)
     throw std::system_error(errno, std::system_category());
   auto& new_thr = add_traced_thread(new_tid);
   
-  auto& thr_which = get_thread(which);
+  auto& thr_which = thr_e.second.dbg_thr;
   notify_thread_created(self, thr_which, new_thr);
 }
 
-void LocalDebuggee::Impl::on_thread_exited(LocalDebuggee & self, thread_id which,
+void LocalDebuggee::Impl::on_thread_exited(LocalDebuggee & self,
+                                           DbgThreadEntry & thr_e,
                                            int exit_code)
 {
-  const auto thr_itr = find_thread(which);
-  if(thr_itr == threads_.end())
-    throw std::invalid_argument("unknown thread");
+  auto& thr_which = thr_e.second.dbg_thr;
+  notify_thread_exited(self, thr_which, exit_code);
   
-  notify_thread_exited(self, *thr_itr, exit_code);
-  
-  if(which != process_.id())
-    threads_.erase(thr_itr);
+  const auto tid = thr_e.first;
+  if(tid != process_.id())
+    threads_.erase(tid);
 }
 
-void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self, thread_id which,
+void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self,
+                                      DbgThreadEntry & thr_e,
                                       const siginfo_t & si)
 {
-  auto& thr_which = get_thread(which);
+  auto& thr_which = thr_e.second.dbg_thr;
   if(si.si_signo == TRAP_TRACE) {
     notify_singlestep(self, thr_which);
   } else {
@@ -315,18 +318,19 @@ void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self, thread_id which,
       self.bp_mgr_.restore_bps();
     } else {
       notify_unhandled_bp(self, thr_which);
-      sig_deliv_ = evt_ign_ ? 0 : SIGTRAP;
+      thr_e.second.sig_deliv = evt_ign_ ? 0 : SIGTRAP;
     }
   }
 }
 
-void LocalDebuggee::Impl::on_signal(LocalDebuggee & self, thread_id which,
+void LocalDebuggee::Impl::on_signal(LocalDebuggee & self,
+                                    DbgThreadEntry & thr_e,
                                     const siginfo_t & si)
 {
-  auto& thr_which = get_thread(which);
+  auto& thr_which = thr_e.second.dbg_thr;
   if(si.si_signo == SIGSEGV)
     notify_access_violation(self, thr_which);
-  sig_deliv_ = evt_ign_ ? 0 : si.si_signo;
+  thr_e.second.sig_deliv = evt_ign_ ? 0 : si.si_signo;
 }
 
 void LocalDebuggee::Impl::notify_process_created(LocalDebuggee & self, LocalDebugThread & which,
@@ -400,12 +404,12 @@ const DebugProcess & LocalDebuggee::process() const
 
 DebugThread & LocalDebuggee::get_thread(thread_id tid)
 {
-  return pimpl_->get_thread(tid);
+  return pimpl_->threads_.at(tid).dbg_thr;
 }
 
 const DebugThread & LocalDebuggee::get_thread(thread_id tid) const
 {
-  return pimpl_->get_thread(tid);
+  return pimpl_->threads_.at(tid).dbg_thr;
 }
 
 bool LocalDebuggee::attached() const
@@ -415,35 +419,34 @@ bool LocalDebuggee::attached() const
 
 void LocalDebuggee::singlestep(DebugThread & run_thr)
 {
-  ptrace_singlestep(run_thr.id(), 0);
+  const auto which = run_thr.id();
+  ptrace_singlestep(which, 0);
+  
   Impl::DebugEventInternal evt;
-  pimpl_->wait_event(run_thr.id(), &evt);
+  pimpl_->wait_event(which, evt);
   pimpl_->dispatch_event(*this, evt);
 }
 
-void LocalDebuggee::run()
+void LocalDebuggee::run_until_next_event()
 {
-  for(auto& dbg_thr : pimpl_->threads_) {
-    if(::ptrace(PTRACE_CONT, dbg_thr.id(), nullptr, nullptr) == -1)
-      throw std::system_error(errno, std::system_category());
-  }
-  
-  while(pimpl_->attached_) {
-    Impl::DebugEventInternal evt;
-    pimpl_->wait_event(&evt);
-    pimpl_->dispatch_event(*this, evt);
-    
-    if(pimpl_->attached_) {
-      if(::ptrace(PTRACE_CONT, evt.wtid, nullptr, pimpl_->sig_deliv_) == -1)
+  for(auto& thr_e : pimpl_->threads_) {
+    if(thr_e.second.stopped) {
+      if(::ptrace(PTRACE_CONT, thr_e.first, nullptr, thr_e.second.sig_deliv) == -1)
         throw std::system_error(errno, std::system_category());
+      thr_e.second.stopped = false;
+      thr_e.second.sig_deliv = 0;
     }
   }
+  
+  Impl::DebugEventInternal evt;
+  pimpl_->wait_event(evt);
+  pimpl_->dispatch_event(*this, evt);
 }
 
 void LocalDebuggee::detach()
 {
-  for(auto& thr : pimpl_->threads_) {
-    if(::ptrace(PTRACE_DETACH, thr.id(), nullptr, nullptr) == -1)
+  for(auto& thr_e : pimpl_->threads_) {
+    if(::ptrace(PTRACE_DETACH, thr_e.first, nullptr, nullptr) == -1)
       throw std::system_error(errno, std::system_category());
   }
   pimpl_->attached_ = false;

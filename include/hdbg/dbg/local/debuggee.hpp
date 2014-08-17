@@ -30,8 +30,9 @@ public:
   virtual const DebugThread & get_thread(thread_id) const override;
   
   virtual bool attached() const override;
+  
   virtual void singlestep(DebugThread &) override;
-  virtual void run() override;
+  virtual void run_until_next_event() override;
   
   virtual void detach() override;
   virtual void kill() override;

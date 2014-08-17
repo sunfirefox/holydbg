@@ -45,7 +45,8 @@ public:
   virtual bool attached() const = 0;
   
   virtual void singlestep(DebugThread &) = 0;
-  virtual void run() = 0;
+  virtual void run_until_next_event() = 0;
+  virtual void run();
   
   virtual void detach() = 0;
   virtual void kill() = 0;
