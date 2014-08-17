@@ -42,18 +42,21 @@ public:
   virtual DebugThread & get_thread(thread_id) = 0;
   virtual const DebugThread & get_thread(thread_id) const = 0;
   
+  virtual bool attached() const = 0;
+  
   virtual void singlestep(DebugThread &) = 0;
   virtual void run() = 0;
   
   virtual void detach() = 0;
   virtual void kill() = 0;
   
+  virtual void add_listener(std::shared_ptr<DebugEventListener> sp_listener) = 0;
+  virtual void remove_listener(const std::shared_ptr<DebugEventListener> & sp_listener) = 0;
+  virtual void discard_event() = 0;
+  
   virtual breakpoint_id set_bp(Breakpoint *, BpHandlerFn) = 0;
   virtual void remove_bp(breakpoint_id) = 0;
   virtual void remove_all_bps() = 0;
-  
-  virtual void add_listener(std::shared_ptr<DebugEventListener> sp_listener) = 0;
-  virtual void remove_listener(const std::shared_ptr<DebugEventListener> & sp_listener) = 0;
 };
 
 } // namespace hdbg

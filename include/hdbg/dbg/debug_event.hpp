@@ -12,41 +12,53 @@ class DebugThread;
 
 struct ProcessCreatedEvent
 {
-  Debuggee * instance;
-  DebugThread * thr;
+  Debuggee * debuggee;
+  DebugThread * thread;
   process_id new_pid;
 };
 
 struct ProcessExitedEvent
 {
-  Debuggee * instance;
+  Debuggee * debuggee;
   int exit_code;
 };
 
 struct ProcessKilledEvent
 {
-  Debuggee * instance;
+  Debuggee * debuggee;
   int term_code;
 };
 
 struct ThreadCreatedEvent
 {
-  Debuggee * instance;
-  DebugThread * thr;
-  DebugThread * new_thr;
+  Debuggee * debuggee;
+  DebugThread * thread;
+  DebugThread * new_thread;
 };
 
 struct ThreadExitedEvent
 {
-  Debuggee * instance;
-  DebugThread * thr;
+  Debuggee * debuggee;
+  DebugThread * thread;
   int exit_code;
+};
+
+struct UnhandledBpEvent
+{
+  Debuggee * debuggee;
+  DebugThread * thread;
+};
+
+struct SinglestepEvent
+{
+  Debuggee * debuggee;
+  DebugThread * thread;
 };
 
 struct AccessViolationEvent
 {
-  Debuggee * instance;
-  DebugThread * thr;
+  Debuggee * debuggee;
+  DebugThread * thread;
 };
 
 using DebugEventListener = EventListener
@@ -56,6 +68,8 @@ using DebugEventListener = EventListener
   ProcessKilledEvent,
   ThreadCreatedEvent,
   ThreadExitedEvent,
+  UnhandledBpEvent,
+  SinglestepEvent,
   AccessViolationEvent
 >;
 
@@ -66,6 +80,8 @@ using DebugEventEmitter = EventEmitter
   ProcessKilledEvent,
   ThreadCreatedEvent,
   ThreadExitedEvent,
+  UnhandledBpEvent,
+  SinglestepEvent,
   AccessViolationEvent
 >;
 

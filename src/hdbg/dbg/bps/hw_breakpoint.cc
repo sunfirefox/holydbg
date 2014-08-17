@@ -32,12 +32,12 @@ HwBreakpoint::HwBpxDbgEvtListener::HwBpxDbgEvtListener(HwBreakpoint & hw_bpx)
 
 void HwBreakpoint::HwBpxDbgEvtListener::handle_event(const ThreadCreatedEvent & dbg_evt)
 {
-  hw_bpx_.set_on_thread(*dbg_evt.new_thr);
+  hw_bpx_.set_on_thread(*dbg_evt.new_thread);
 }
 
 void HwBreakpoint::HwBpxDbgEvtListener::handle_event(const ThreadExitedEvent & dbg_evt)
 {
-  hw_bpx_.remove_from_thread(*dbg_evt.thr);
+  hw_bpx_.remove_from_thread(*dbg_evt.thread);
 }
 
 HwBreakpoint::HwBreakpoint(std::uintptr_t addr)
