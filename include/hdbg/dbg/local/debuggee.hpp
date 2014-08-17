@@ -60,14 +60,14 @@ struct ExecParams
     HasEnv  = 1 << 1,
   };
   
-  int flags = 0;
+  unsigned int flags = 0;
   std::string file;
   std::vector<std::string> args;
   std::map<std::string, std::string> env;
 };
 
-HDBG_EXPORT std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, int flags = 0);
-HDBG_EXPORT std::unique_ptr<Debuggee> dbg_attach(process_id pid, int flags = 0);
+HDBG_EXPORT std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, unsigned int flags = 0);
+HDBG_EXPORT std::unique_ptr<Debuggee> dbg_attach(process_id pid, unsigned int flags = 0);
 
 } // namespace hdbg
 

@@ -485,7 +485,7 @@ void LocalDebuggee::remove_all_bps()
   bp_mgr_.remove_all_bps();
 }
 
-std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, int flags)
+std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, unsigned int flags)
 {
   std::vector<const char *> arg_ptrs { params.file.c_str() };
   if(params.flags & ExecParams::Flags::HasArgs) {
@@ -545,7 +545,7 @@ std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, int flags)
   return dbg_ptr;
 }
 
-std::unique_ptr<Debuggee> dbg_attach(process_id pid, int flags)
+std::unique_ptr<Debuggee> dbg_attach(process_id pid, unsigned int flags)
 {
   ProcessStopGuard ps_guard( pid );
   
