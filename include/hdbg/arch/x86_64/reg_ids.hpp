@@ -1,10 +1,9 @@
-#ifndef __HDBG_SRC_ARCH_X86_64_REG_IDS_HPP__
-#define __HDBG_SRC_ARCH_X86_64_REG_IDS_HPP__
+#ifndef __HDBG_ARCH_X86_64_REG_IDS_HPP__
+#define __HDBG_ARCH_X86_64_REG_IDS_HPP__
 
 namespace hdbg {
 
-enum X64_RegId
-{
+enum {
   // gen purpose
   X64_RegRax, X64_RegRbx, X64_RegRcx, X64_RegRdx,
   X64_RegRsi, X64_RegRdi, X64_RegRbp, X64_RegRsp,
@@ -24,4 +23,4 @@ enum X64_RegId
 
 } // namespace hdbg
 
-#endif // __HDBG_SRC_ARCH_X86_64_REG_IDS_HPP__
+#endif // __HDBG_ARCH_X86_64_REG_IDS_HPP__

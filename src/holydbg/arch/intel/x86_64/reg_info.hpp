@@ -1,9 +1,9 @@
-#ifndef __HDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
-#define __HDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
+#ifndef __HOLYDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
+#define __HOLYDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
 
-#include <hdbg/arch/reg_info.hpp>
+#include <holydbg/arch_introspection.hpp>
 
-namespace hdbg {
+namespace holydbg {
 
 const RegInfo x64_ah_info  {  "ah",  8,  8 },
               x64_al_info  {  "al",  8,  8 },
@@ -126,6 +126,6 @@ const RegInfo x64_dr0_info { "dr0", 64, 0 },
               x64_dr6_info { "dr6", 64, 0 },
               x64_dr7_info { "dr7", 64, 0 };
 
-} // namespace hdbg
+} // namespace holydbg
 
-#endif // __HDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
+#endif // __HOLYDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__

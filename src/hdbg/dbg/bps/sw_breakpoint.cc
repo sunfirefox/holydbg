@@ -5,6 +5,7 @@
 #include <hdbg/dbg/debuggee.hpp>
 #include <hdbg/dbg/debug_process.hpp>
 #include <hdbg/dbg/debug_thread.hpp>
+#include <hdbg/dbg/thread_context.hpp>
 
 #include "../../arch/arch_internals.hpp"
 

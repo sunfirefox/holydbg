@@ -1,6 +1,5 @@
 include(BuildUnit)
-
-define_build_unit(lib_hdbg "${CMAKE_SOURCE_DIR}/src/holydbg")
+define_build_unit(lib_hdbg)
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -29,18 +28,18 @@ add_subdirectory(binfmt)
 add_subdirectory(dbg)
 add_subdirectory(os)
 
-get_property(lib_hdbg_include_dirs GLOBAL PROPERTY lib_hdbg_INC_DIRS)
-include_directories(${holydbg_include_dirs})
-
 if(LIBHDBG_STATIC)
   set(lib_hdbg_linkage STATIC)
 else()
   set(lib_hdbg_linkage SHARED)
 endif()
 
-get_property(lib_hdbg_src_files GLOBAL PROPERTY lib_hdbg_SRCS)
-get_property(lib_hdbg_link_deps GLOBAL PROPERTY lib_hdbg_DEPS)
+get_property(lib_hdbg_src_files    GLOBAL PROPERTY lib_hdbg_SRCS)
+get_property(lib_hdbg_include_dirs GLOBAL PROPERTY lib_hdbg_INC_DIRS)
+get_property(lib_hdbg_link_deps    GLOBAL PROPERTY lib_hdbg_DEPS)
+
 add_library(hdbg ${lib_hdbg_linkage} ${lib_hdbg_src_files})
+include_directories(${holydbg_include_dirs})
 target_link_libraries(hdbg ${lib_hdbg_link_deps})
 
 install(TARGETS hdbg
