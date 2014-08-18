@@ -7,6 +7,10 @@ namespace holydbg {
 
 struct RegInfo
 {
+  enum {
+    FlagsRegister = 1 << 0,
+  };
+  
   const char * name;
   unsigned int bits;
   unsigned int rshift;

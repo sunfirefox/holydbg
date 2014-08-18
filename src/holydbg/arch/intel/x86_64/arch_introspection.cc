@@ -53,7 +53,7 @@ const std::vector<RegCategoryInfo> & X64_ArchIntrospection::reg_categories() con
   using namespace hdbg;
   
   static const std::vector<RegCategoryInfo> x64_reg_categories = {
-    { "General purpose",
+    { "General purpose registers",
        { X64_RegRax, X64_RegRbx ,
          X64_RegRcx, X64_RegRdx ,
          X64_RegRsi, X64_RegRdi ,
