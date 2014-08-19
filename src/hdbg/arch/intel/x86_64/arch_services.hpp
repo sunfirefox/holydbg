@@ -5,13 +5,16 @@
 
 namespace hdbg {
 
-class X64_ArchServices final : public ArchServices
+class X64_ArchServices final
+  : public ArchServices
 {
 public:
   X64_ArchServices();
   virtual ~X64_ArchServices();
   
   virtual unsigned int reg_index(const char * reg_tag) const override;
+  virtual const RegInfo & reg_info(unsigned int reg_idx) const override;
+  virtual const std::vector<RegCategoryInfo> & reg_categories() const override;
   
   virtual ArchInternals & get_internals() const override;
 };

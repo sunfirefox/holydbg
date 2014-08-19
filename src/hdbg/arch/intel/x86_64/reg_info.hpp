@@ -1,14 +1,12 @@
-#ifndef __HOLYDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
-#define __HOLYDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
+#ifndef __HDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
+#define __HDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
 
-#include <holydbg/arch_introspection.hpp>
-
-namespace holydbg {
+namespace hdbg {
 
 const RegInfo x64_ah_info  {  "ah",  8, 8 },
               x64_al_info  {  "al",  8, 0 },
               x64_ax_info  {  "ax", 16, 0 , { &x64_ah_info  ,
-                                             &x64_al_info  } },
+                                              &x64_al_info  } },
               x64_eax_info { "eax", 32, 0 , { &x64_ax_info  } },
               x64_rax_info { "rax", 64, 0 , { &x64_eax_info } };
 
@@ -115,16 +113,16 @@ const RegInfo x64_flg_cf   {   "CF", 1,  0 },
               x64_flg_vip  {  "VIP", 1, 20 },
               x64_flg_id   {   "ID", 1, 21 };
 
-const RegInfo x64_flags_info  {  "flags", 16, 0 , { &x64_flg_cf, &x64_flg_pf ,
-                                                    &x64_flg_af, &x64_flg_zf ,
-                                                    &x64_flg_sf, &x64_flg_tf ,
-                                                    &x64_flg_if, &x64_flg_df ,
-                                                    &x64_flg_of, &x64_flg_iopl,
-                                                    &x64_flg_nt } },
+const RegInfo x64_flags_info  {  "flags", 16, 0 , { &x64_flg_cf,  &x64_flg_pf   ,
+                                                    &x64_flg_af,  &x64_flg_zf   ,
+                                                    &x64_flg_sf,  &x64_flg_tf   ,
+                                                    &x64_flg_if,  &x64_flg_df   ,
+                                                    &x64_flg_of,  &x64_flg_iopl ,
+                                                    &x64_flg_nt                 } },
               x64_eflags_info { "eflags", 32, 0 , { &x64_flags_info,
-                                                    &x64_flg_rf,  &x64_flg_vm  ,
-                                                    &x64_flg_ac,  &x64_flg_vif ,
-                                                    &x64_flg_vip, &x64_flg_id  } },
+                                                    &x64_flg_rf,  &x64_flg_vm   ,
+                                                    &x64_flg_ac,  &x64_flg_vif  ,
+                                                    &x64_flg_vip, &x64_flg_id   } },
               x64_rflags_info { "rflags", 64, 0 , { &x64_eflags_info } };
 
 const RegInfo x64_cs_info { "cs", 16, 0 },
@@ -152,6 +150,6 @@ const RegInfo x64_dr0_info { "dr0", 64, 0 },
               x64_dr6_info { "dr6", 64, 0 },
               x64_dr7_info { "dr7", 64, 0 };
 
-} // namespace holydbg
+} // namespace hdbg
 
-#endif // __HOLYDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__
+#endif // __HDBG_SRC_ARCH_INTEL_X86_64_REG_INFO_HPP__

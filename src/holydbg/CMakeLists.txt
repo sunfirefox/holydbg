@@ -13,8 +13,6 @@ else()
                 "Please use a different C++ compiler" )
 endif()
 
-add_subdirectory(arch)
-
 unit_add_sources(holydbg main.cc)
 unit_add_link_deps(holydbg hdbg)
 

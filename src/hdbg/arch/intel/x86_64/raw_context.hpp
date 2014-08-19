@@ -80,7 +80,8 @@ struct x64_user
 
 } // namespace detail
 
-class X64_RawContext final : public RawContext
+class X64_RawContext final
+  : public RawContext
 {
 public:
   X64_RawContext();

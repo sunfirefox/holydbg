@@ -5,7 +5,8 @@
 
 namespace hdbg {
 
-class X64_ArchInternals final : public ArchInternals
+class X64_ArchInternals final
+  : public ArchInternals
 {
 public:
   X64_ArchInternals();

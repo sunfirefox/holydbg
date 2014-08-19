@@ -394,21 +394,25 @@ LocalDebuggee::~LocalDebuggee()
 
 DebugProcess & LocalDebuggee::process()
 {
+  assert( attached() );
   return pimpl_->process_;
 }
 
 const DebugProcess & LocalDebuggee::process() const
 {
+  assert( attached() );
   return pimpl_->process_;
 }
 
 DebugThread & LocalDebuggee::get_thread(thread_id tid)
 {
+  assert( attached() );
   return pimpl_->threads_.at(tid).dbg_thr;
 }
 
 const DebugThread & LocalDebuggee::get_thread(thread_id tid) const
 {
+  assert( attached() );
   return pimpl_->threads_.at(tid).dbg_thr;
 }
 
@@ -419,6 +423,8 @@ bool LocalDebuggee::attached() const
 
 void LocalDebuggee::singlestep(DebugThread & run_thr)
 {
+  assert( attached() );
+  
   const auto which = run_thr.id();
   ptrace_singlestep(which, 0);
   
@@ -429,6 +435,8 @@ void LocalDebuggee::singlestep(DebugThread & run_thr)
 
 void LocalDebuggee::run_until_next_event()
 {
+  assert( attached() );
+  
   for(auto& thr_e : pimpl_->threads_) {
     if(thr_e.second.stopped) {
       if(::ptrace(PTRACE_CONT, thr_e.first, nullptr, thr_e.second.sig_deliv) == -1)
@@ -445,6 +453,8 @@ void LocalDebuggee::run_until_next_event()
 
 void LocalDebuggee::detach()
 {
+  assert( attached() );
+  
   for(auto& thr_e : pimpl_->threads_) {
     if(::ptrace(PTRACE_DETACH, thr_e.first, nullptr, nullptr) == -1)
       throw std::system_error(errno, std::system_category());
@@ -454,6 +464,8 @@ void LocalDebuggee::detach()
 
 void LocalDebuggee::kill()
 {
+  assert( attached() );
+  
   pimpl_->process_.kill(true);
   pimpl_->attached_ = false;
 }
@@ -470,21 +482,25 @@ void LocalDebuggee::remove_listener(const std::shared_ptr<DebugEventListener> & 
 
 void LocalDebuggee::discard_event()
 {
+  assert( attached() );
   pimpl_->evt_ign_ = true;
 }
 
 breakpoint_id LocalDebuggee::set_bp(Breakpoint * bp, BpHandlerFn fn)
 {
+  assert( attached() );
   return bp_mgr_.set_bp(*this, bp, fn);
 }
 
 void LocalDebuggee::remove_bp(breakpoint_id bp_id)
 {
+  assert( attached() );
   bp_mgr_.remove_bp(bp_id);
 }
 
 void LocalDebuggee::remove_all_bps()
 {
+  assert( attached() );
   bp_mgr_.remove_all_bps();
 }
 
