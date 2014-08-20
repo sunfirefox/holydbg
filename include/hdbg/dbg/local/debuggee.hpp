@@ -67,8 +67,8 @@ struct ExecParams
   std::map<std::string, std::string> env;
 };
 
-HDBG_EXPORT std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, unsigned int flags = 0);
-HDBG_EXPORT std::unique_ptr<Debuggee> dbg_attach(process_id pid, unsigned int flags = 0);
+HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_exec(const ExecParams & params, unsigned int flags = 0);
+HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_attach(process_id pid, unsigned int flags = 0);
 
 } // namespace hdbg
 

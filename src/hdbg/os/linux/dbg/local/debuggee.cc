@@ -5,7 +5,6 @@
 #include <hdbg/enum/enum_threads.hpp>
 
 #include "../../process_kill_guard.hpp"
-#include "../../process_stop_guard.hpp"
 
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
@@ -504,7 +503,7 @@ void LocalDebuggee::remove_all_bps()
   bp_mgr_.remove_all_bps();
 }
 
-std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, unsigned int flags)
+std::unique_ptr<LocalDebuggee> dbg_exec(const ExecParams & params, unsigned int flags)
 {
   std::vector<const char *> arg_ptrs { params.file.c_str() };
   if(params.flags & ExecParams::Flags::HasArgs) {
@@ -559,16 +558,16 @@ std::unique_ptr<Debuggee> dbg_exec(const ExecParams & params, unsigned int flags
   
   ProcessKillGuard pk_guard( pid, SIGKILL );
   LocalDebugProcess dbg_proc( pid, DebugProcess::OpenFlags::AllAccess );
-  std::unique_ptr<Debuggee> dbg_ptr( new LocalDebuggee(std::move(dbg_proc), flags) );
+  std::unique_ptr<LocalDebuggee> dbg_ptr( new LocalDebuggee(std::move(dbg_proc), flags) );
   pk_guard.cancel();
   return dbg_ptr;
 }
 
-std::unique_ptr<Debuggee> dbg_attach(process_id pid, unsigned int flags)
+std::unique_ptr<LocalDebuggee> dbg_attach(process_id pid, unsigned int flags)
 {
-  ProcessStopGuard ps_guard( pid );
+  if(::kill(pid, SIGSTOP) == -1)
+    throw std::system_error(errno, std::system_category());
   
-  // only attach to main thread
   if(::ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) == -1)
     throw std::system_error(errno, std::system_category());
   
@@ -576,7 +575,7 @@ std::unique_ptr<Debuggee> dbg_attach(process_id pid, unsigned int flags)
     throw std::system_error(errno, std::system_category());
   
   LocalDebugProcess dbg_proc(pid, DebugProcess::OpenFlags::AllAccess);
-  std::unique_ptr<Debuggee> dbg_instance( new LocalDebuggee(std::move(dbg_proc), flags) );
+  std::unique_ptr<LocalDebuggee> dbg_instance( new LocalDebuggee(std::move(dbg_proc), flags) );
   return dbg_instance;
 }
 

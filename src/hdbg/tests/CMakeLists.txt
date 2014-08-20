@@ -5,7 +5,7 @@ set(hdbg_tests
       enum_proc
       enum_thr
       binfmt_img
-      debuggee
+      local_debuggee
       thr_ctx)
 
 foreach(test ${hdbg_tests})

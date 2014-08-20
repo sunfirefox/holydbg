@@ -33,12 +33,12 @@ std::uintptr_t process_entry_point(const hdbg::DebugProcess & dbg_proc)
 
 } // namespace
 
-class DebuggeeTest
+class LocalDebuggeeTest
   : public ::testing::Test
 {
 public:
-  DebuggeeTest();
-  virtual ~DebuggeeTest();
+  LocalDebuggeeTest();
+  virtual ~LocalDebuggeeTest();
   
   std::unique_ptr<hdbg::Debuggee> debuggee_;
   hdbg::DebugProcess & dbg_proc_;
@@ -47,7 +47,7 @@ public:
   unsigned int ip_idx_;
 };
 
-DebuggeeTest::DebuggeeTest()
+LocalDebuggeeTest::LocalDebuggeeTest()
   : debuggee_([]{
       hdbg::ExecParams ep;
       ep.file = "dummy_exec";
@@ -58,13 +58,13 @@ DebuggeeTest::DebuggeeTest()
   , arch_svc_( process_arch_services(dbg_proc_) )
   , ip_idx_ ( arch_svc_.reg_index("inst-ptr") ) {}
 
-DebuggeeTest::~DebuggeeTest() = default;
+LocalDebuggeeTest::~LocalDebuggeeTest() = default;
 
-TEST_F(DebuggeeTest, DbgExecRun) {
+TEST_F(LocalDebuggeeTest, DbgExecRun) {
   ASSERT_NO_THROW(debuggee_->run());
 }
 
-TEST_F(DebuggeeTest, SetSwBpx) {
+TEST_F(LocalDebuggeeTest, SetSwBpx) {
   unsigned int bp_hits = 0;
   const hdbg::breakpoint_id bpx_id = debuggee_->set_bp(new hdbg::SwBreakpoint(entry_pt_),
     [this, &bpx_id, &bp_hits](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
@@ -81,7 +81,7 @@ TEST_F(DebuggeeTest, SetSwBpx) {
   ASSERT_EQ(1, bp_hits);
 }
 
-TEST_F(DebuggeeTest, SetHwBpx) {
+TEST_F(LocalDebuggeeTest, SetHwBpx) {
   unsigned int bp_hits = 0;
   const hdbg::breakpoint_id bpx_id = debuggee_->set_bp(new hdbg::HwBreakpoint(entry_pt_),
     [this, &bpx_id, &bp_hits](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
