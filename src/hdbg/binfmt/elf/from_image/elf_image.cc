@@ -2,8 +2,6 @@
 
 #include <hdbg/dbg/debug_process.hpp>
 
-#include <elf.h>
-
 #include <algorithm>
 #include <cstddef>
 #include <sstream>

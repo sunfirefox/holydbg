@@ -36,8 +36,8 @@ private:
   Elf_Ehdr<ElfXX> ehdr_;
 };
 
-typedef Elf_Image<elf32_typedefs> Elf32_Image;
-typedef Elf_Image<elf64_typedefs> Elf64_Image;
+typedef Elf_Image<Elf32> Elf32_Image;
+typedef Elf_Image<Elf64> Elf64_Image;
 
 bool elf_check_image(const DebugProcess & proc, std::uintptr_t base);
 std::unique_ptr<BinaryFormat> make_elf_image(const DebugProcess & proc, std::uintptr_t base);

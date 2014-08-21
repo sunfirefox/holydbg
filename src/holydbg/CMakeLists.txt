@@ -20,8 +20,6 @@ get_property(holydbg_src_files    GLOBAL PROPERTY holydbg_SRCS)
 get_property(holydbg_include_dirs GLOBAL PROPERTY holydbg_INC_DIRS)
 get_property(holydbg_link_deps    GLOBAL PROPERTY holydbg_DEPS)
 
-message("" ${holydbg_src_files})
-
 add_executable(holydbg ${holydbg_src_files})
 include_directories(${holydbg_include_dirs})
 target_link_libraries(holydbg ${holydbg_link_deps})
