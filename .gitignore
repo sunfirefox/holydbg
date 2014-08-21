@@ -18,3 +18,4 @@ tests/**
 build/**
 
 include/hdbg/config.h
+distorm/include/distorm3/config.h
