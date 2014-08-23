@@ -58,6 +58,8 @@ public:
   virtual breakpoint_id set_bp(Breakpoint *, BpHandlerFn) = 0;
   virtual void remove_bp(breakpoint_id) = 0;
   virtual void remove_all_bps() = 0;
+  
+  virtual std::unique_ptr<Debuggee> attach_child(process_id pid) const = 0;
 };
 
 } // namespace hdbg

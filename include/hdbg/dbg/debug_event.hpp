@@ -68,6 +68,18 @@ struct AccessViolationEvent
   DebugThread * thread;
 };
 
+struct FloatingPointExceptionEvent
+{
+  Debuggee * debuggee;
+  DebugThread * thread;
+};
+
+struct IllegalInstructionEvent
+{
+  Debuggee * debuggee;
+  DebugThread * thread;
+};
+
 typedef boost::variant
 <
   UnknownEvent,
@@ -78,7 +90,9 @@ typedef boost::variant
   ThreadExitedEvent,
   BreakpointHitEvent,
   SinglestepEvent,
-  AccessViolationEvent
+  AccessViolationEvent,
+  FloatingPointExceptionEvent,
+  IllegalInstructionEvent
 > DebugEvent;
 
 enum {
@@ -90,7 +104,9 @@ enum {
   ThreadExitedEventId,
   BreakpointHitEventId,
   SinglestepEventId,
-  AccessViolationEventId
+  AccessViolationEventId,
+  FloatingPointExceptionEventId,
+  IllegalInstructionEventId
 } DebugEventId;
 
 typedef EventListener
@@ -103,7 +119,9 @@ typedef EventListener
   ThreadExitedEvent,
   BreakpointHitEvent,
   SinglestepEvent,
-  AccessViolationEvent
+  AccessViolationEvent,
+  FloatingPointExceptionEvent,
+  IllegalInstructionEvent
 > DebugEventListener;
 
 typedef EventEmitter
@@ -116,7 +134,9 @@ typedef EventEmitter
   ThreadExitedEvent,
   BreakpointHitEvent,
   SinglestepEvent,
-  AccessViolationEvent
+  AccessViolationEvent,
+  FloatingPointExceptionEvent,
+  IllegalInstructionEvent
 > DebugEventEmitter;
 
 } // namespace hdbg

@@ -45,6 +45,8 @@ public:
   virtual void remove_bp(breakpoint_id bp_id) override;
   virtual void remove_all_bps() override;
   
+  virtual std::unique_ptr<Debuggee> attach_child(process_id pid) const override;
+  
 private:
   DebugEventEmitter evt_emitter_;
   BreakpointManager bp_mgr_;
