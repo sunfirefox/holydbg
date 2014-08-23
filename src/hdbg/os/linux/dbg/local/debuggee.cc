@@ -108,7 +108,7 @@ private:
   void on_thread_exited(LocalDebuggee & self, DbgThreadEntry & thr_e, int exit_code);
   void on_sig_trap(LocalDebuggee & self, DbgThreadEntry & thr_e, const siginfo_t & si);
   void on_signal(LocalDebuggee & self, DbgThreadEntry & thr_e, const siginfo_t & si);
-  void on_unknown_event(LocalDebuggee & self, DbgThreadEntry & thr_e, const RawDebugEvent & raw_evt);
+  void on_unknown_event(LocalDebuggee & self, const RawDebugEvent & raw_evt);
   
   bool handle_bp_event(LocalDebuggee & self, LocalDebugThread & which, const DebugEvent & evt);
   
@@ -250,6 +250,7 @@ void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
     on_process_killed(self, WTERMSIG(status));
   } else {
     std::cerr << "-> unknown event" << std::endl;
+    on_unknown_event(self, evt);
   }
 }
 
@@ -356,11 +357,8 @@ void LocalDebuggee::Impl::on_signal(LocalDebuggee & self,
   thr_e.second.sig_deliv = evt_ign_ ? 0 : si.si_signo;
 }
 
-void LocalDebuggee::Impl::on_unknown_event(LocalDebuggee & self,
-                                           DbgThreadEntry & thr_e,
-                                           const RawDebugEvent & raw_evt)
+void LocalDebuggee::Impl::on_unknown_event(LocalDebuggee & self, const RawDebugEvent & raw_evt)
 {
-  auto& thr_which = thr_e.second.dbg_thr;
   notify_event(self, UnknownEvent{ &self });
 }
 
