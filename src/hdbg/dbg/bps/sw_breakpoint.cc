@@ -48,8 +48,15 @@ void SwBreakpoint::cleanup(Debuggee & debuggee)
   dbg_proc.write_mem(addr_, ov_data_.size(), ov_data_.data());
 }
 
-bool SwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_ctx) const
+bool SwBreakpoint::match(const DebugThread & dbg_thr, const DebugEvent & dbg_evt,
+                         const ThreadContext & thr_ctx) const
 {
+  if(dbg_evt.which() != UnknownEventId       &&
+     dbg_evt.which() != BreakpointHitEventId )
+  {
+    return false;
+  }
+  
   auto& arch_svc = process_arch_services( dbg_thr.process() );
   const auto iptr = arch_svc.get_inst_ptr(thr_ctx);
   return iptr - ov_data_.size() == addr_;

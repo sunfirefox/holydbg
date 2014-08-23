@@ -5,10 +5,17 @@
 #include <hdbg/utils/event_emitter.hpp>
 #include <hdbg/utils/event_listener.hpp>
 
+#include <boost/variant.hpp>
+
 namespace hdbg {
 
 class Debuggee;
 class DebugThread;
+
+struct UnknownEvent
+{
+  Debuggee * debuggee;
+};
 
 struct ProcessCreatedEvent
 {
@@ -43,7 +50,7 @@ struct ThreadExitedEvent
   int exit_code;
 };
 
-struct UnhandledBpEvent
+struct BreakpointHitEvent
 {
   Debuggee * debuggee;
   DebugThread * thread;
@@ -61,29 +68,56 @@ struct AccessViolationEvent
   DebugThread * thread;
 };
 
-using DebugEventListener = EventListener
+typedef boost::variant
 <
+  UnknownEvent,
   ProcessCreatedEvent,
   ProcessExitedEvent,
   ProcessKilledEvent,
   ThreadCreatedEvent,
   ThreadExitedEvent,
-  UnhandledBpEvent,
+  BreakpointHitEvent,
   SinglestepEvent,
   AccessViolationEvent
->;
+> DebugEvent;
 
-using DebugEventEmitter = EventEmitter
+enum {
+  UnknownEventId,
+  ProcessCreatedEventId,
+  ProcessExitedEventId,
+  ProcessKilledEventId,
+  ThreadCreatedEventId,
+  ThreadExitedEventId,
+  BreakpointHitEventId,
+  SinglestepEventId,
+  AccessViolationEventId
+} DebugEventId;
+
+typedef EventListener
 <
+  UnknownEvent,
   ProcessCreatedEvent,
   ProcessExitedEvent,
   ProcessKilledEvent,
   ThreadCreatedEvent,
   ThreadExitedEvent,
-  UnhandledBpEvent,
+  BreakpointHitEvent,
   SinglestepEvent,
   AccessViolationEvent
->;
+> DebugEventListener;
+
+typedef EventEmitter
+<
+  UnknownEvent,
+  ProcessCreatedEvent,
+  ProcessExitedEvent,
+  ProcessKilledEvent,
+  ThreadCreatedEvent,
+  ThreadExitedEvent,
+  BreakpointHitEvent,
+  SinglestepEvent,
+  AccessViolationEvent
+> DebugEventEmitter;
 
 } // namespace hdbg
 

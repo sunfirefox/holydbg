@@ -44,15 +44,16 @@ void BreakpointManager::remove_all_bps(Debuggee * debuggee)
   }
 }
 
-bool BreakpointManager::dispatch_bp_hit(Debuggee & debuggee, DebugThread & dbg_thr)
+bool BreakpointManager::dispatch_bp_hit(Debuggee & debuggee,
+                                        DebugThread & dbg_thr,
+                                        const DebugEvent & dbg_evt)
 {
   dbg_thr.get_context(thr_ctx_);
   
   bool bp_hit = false;
   for(auto& bp_e : bps_) {
-    if(bp_e.second.active                           &&
-       bp_e.second.debuggee == &debuggee            &&
-       bp_e.second.bp_ptr->match(dbg_thr, thr_ctx_) )
+    if(bp_e.second.active && bp_e.second.debuggee == &debuggee &&
+       bp_e.second.bp_ptr->match(dbg_thr, dbg_evt, thr_ctx_))
     {
       const breakpoint_id bp_id = bp_e.first;
       auto& bp_ptr = bp_e.second.bp_ptr;

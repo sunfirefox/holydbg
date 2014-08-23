@@ -17,7 +17,8 @@ public:
   
   virtual void setup(Debuggee & debuggee) override;
   virtual void cleanup(Debuggee & debuggee) override;
-  virtual bool match(const DebugThread & dbg_thr, const ThreadContext & thr_ctx) const override;
+  virtual bool match(const DebugThread & dbg_thr, const DebugEvent & dbg_evt,
+                     const ThreadContext & thr_ctx) const override;
   virtual void rewind(DebugThread & dbg_thr, ThreadContext & thr_ctx) const override;
   
 private:

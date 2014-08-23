@@ -3,6 +3,7 @@
 
 #include <hdbg/dbg/breakpoint.hpp>
 #include <hdbg/dbg/debuggee.hpp>
+#include <hdbg/dbg/debug_event.hpp>
 #include <hdbg/dbg/thread_context.hpp>
 
 #include <map>
@@ -23,11 +24,12 @@ public:
   BreakpointManager(BreakpointManager &&);
   ~BreakpointManager();
   
-  breakpoint_id set_bp(Debuggee &, Breakpoint *, BpHandlerFn);
-  void remove_bp(breakpoint_id);
+  breakpoint_id set_bp(Debuggee & debuggee, Breakpoint * bp, BpHandlerFn handler);
+  void remove_bp(breakpoint_id bp_id);
   void remove_all_bps(Debuggee * debuggee = nullptr);
   
-  bool dispatch_bp_hit(Debuggee &, DebugThread &);
+  bool dispatch_bp_hit(Debuggee & debuggee, DebugThread & dbg_thr,
+                       const DebugEvent & dbg_evt);
   void restore_bps();
   
 private:

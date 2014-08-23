@@ -60,8 +60,15 @@ void HwBreakpoint::cleanup(Debuggee & debuggee)
     remove_from_thread( debuggee.get_thread(thr_e.tid) );
 }
 
-bool HwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_ctx) const
+bool HwBreakpoint::match(const DebugThread & dbg_thr, const DebugEvent & dbg_evt,
+                         const ThreadContext & thr_ctx) const
 {
+  if(dbg_evt.which() != UnknownEventId       &&
+     dbg_evt.which() != BreakpointHitEventId )
+  {
+    return false;
+  }
+  
   auto& arch_svc = process_arch_services( dbg_thr.process() );
   return arch_svc.get_inst_ptr(thr_ctx) == addr_;
 }
