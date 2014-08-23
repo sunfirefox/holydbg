@@ -30,9 +30,7 @@ namespace {
 hdbg::ArchServices & process_arch_services(const hdbg::DebugProcess & dbg_proc)
 {
   const auto proc_img = hdbg::binfmt_from_image(dbg_proc, dbg_proc.image_base());
-  assert( proc_img );
   const auto proc_arch = proc_img->arch();
-  assert( proc_arch );
   return hdbg::get_arch_services(proc_arch);
 }
 
@@ -40,8 +38,7 @@ std::uintptr_t process_entry_point(const hdbg::DebugProcess & dbg_proc)
 {
   const auto img_base = dbg_proc.image_base();
   const auto proc_img = hdbg::binfmt_from_image(dbg_proc, img_base);
-  assert( proc_img );
-  return proc_img->entry();
+  return dbg_proc.image_base() + proc_img->entry();
 }
 
 } // namespace

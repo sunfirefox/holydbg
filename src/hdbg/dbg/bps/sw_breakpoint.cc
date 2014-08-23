@@ -20,9 +20,7 @@ namespace {
 ArchServices & process_arch_services(const DebugProcess & dbg_proc)
 {
   const auto proc_img = binfmt_from_image(dbg_proc, dbg_proc.image_base());
-  assert( proc_img );
   const auto proc_arch = proc_img->arch();
-  assert( proc_arch );
   return get_arch_services(proc_arch);
 }
 
@@ -34,10 +32,10 @@ SwBreakpoint::~SwBreakpoint() = default;
 void SwBreakpoint::setup(Debuggee & debuggee)
 {
   auto& dbg_proc = debuggee.process();
-  auto& arch_internals = process_arch_services(dbg_proc).get_internals();
-  auto& sw_bpx = arch_internals.sw_bpx_template();
-  ov_data_.resize(sw_bpx.size());
+  const auto& arch_internals = process_arch_services(dbg_proc).get_internals();
+  const auto& sw_bpx = arch_internals.sw_bpx_template();
   
+  ov_data_.resize(sw_bpx.size());
   dbg_proc.read_mem(addr_, ov_data_.size(), ov_data_.data());
   dbg_proc.write_mem(addr_, sw_bpx.size(), sw_bpx.data());
 }

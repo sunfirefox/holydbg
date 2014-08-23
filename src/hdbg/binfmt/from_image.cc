@@ -8,7 +8,7 @@ std::unique_ptr<BinaryFormat> binfmt_from_image(const DebugProcess & proc, std::
 {
   if(elf_check_image(proc, base))
     return make_elf_image(proc, base);
-  return nullptr;
+  throw std::runtime_error("unknown binobj format");
 }
 
 } // namespace hdbg

@@ -233,7 +233,7 @@ enum { // Special section indices.
   SHN_ABS       = 0xfff1, // Associated symbol is absolute
   SHN_COMMON    = 0xfff2, // Associated symbol is common
   SHN_XINDEX    = 0xffff, // Index is in extra table.
-  SHN_HIRESERVE = 0xffff  // End of reserved indices
+  SHN_HIRESERVE = 0xffff, // End of reserved indices
 };
 
 enum { // Legal values for sh_type (section type).
@@ -507,7 +507,6 @@ typedef Elf_Phdr<Elf64> Elf64_Phdr;
 enum {
   PN_XNUM = 0xffff,
 };
-
 
 enum { // Legal values for p_type (segment type).
   PT_NULL         = 0,          // Program header table entry unused

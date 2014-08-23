@@ -16,11 +16,11 @@ class EventEmitter
 {
 public:
   EventEmitter() = default;
-  EventEmitter(const EventEmitter & emitter) = delete;
+  EventEmitter(const EventEmitter & emitter) = default;
   EventEmitter(EventEmitter && emitter) = default;
   ~EventEmitter() = default;
   
-  EventEmitter & operator=(const EventEmitter &) = delete;
+  EventEmitter & operator=(const EventEmitter &) = default;
   EventEmitter & operator=(EventEmitter &&) = default;
   
   void add_listener(std::shared_ptr<EventListener<Events...>> sp_listener);

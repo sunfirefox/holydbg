@@ -10,7 +10,8 @@ namespace hdbg {
 
 class DebugProcess;
 
-HDBG_EXPORT std::unique_ptr<BinaryFormat> binfmt_from_image(const DebugProcess & proc, std::uintptr_t base);
+HDBG_EXPORT std::unique_ptr<BinaryFormat>
+  binfmt_from_image(const DebugProcess & dbg_proc, std::uintptr_t base);
 
 } // namespace hdbg
 

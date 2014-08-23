@@ -85,7 +85,7 @@ struct LocalDebuggee::Impl
     int thr_status;
   };
   
-  Impl(Debuggee & self, LocalDebugProcess && proc, unsigned int dbg_flags);
+  Impl(LocalDebugProcess && dbg_proc, unsigned int dbg_flags);
   
   LocalDebugThread & attach_new_thread(thread_id tid);
   LocalDebugThread & add_traced_thread(thread_id tid);
@@ -95,10 +95,11 @@ struct LocalDebuggee::Impl
   void wait_event(pid_t wpid, RawDebugEvent & evt);
   void dispatch_event(LocalDebuggee & self, const RawDebugEvent & evt);
   
-  std::unique_ptr<LocalDebuggee> do_attach_child(process_id pid);
+  std::unique_ptr<LocalDebuggee> do_attach_child(const LocalDebuggee & self, process_id pid);
   
   LocalDebugProcess process_;
   std::unordered_map<thread_id, DbgThreadData> threads_;
+  
   bool attached_;
   bool evt_ign_;
   process_id new_child_;
@@ -119,13 +120,11 @@ private:
   template <typename T>
   void notify_event(LocalDebuggee & self, T && evt);
   
-  const unsigned int dbg_flags_;
   const unsigned long trace_opts_;
 };
 
-LocalDebuggee::Impl::Impl(Debuggee & self, LocalDebugProcess && proc, unsigned int dbg_flags)
+LocalDebuggee::Impl::Impl(LocalDebugProcess && proc, unsigned int dbg_flags)
   : process_( std::move(proc) )
-  , dbg_flags_( dbg_flags )
   , trace_opts_( translate_debug_flags(dbg_flags) )
   , attached_( true )
 {
@@ -321,7 +320,6 @@ void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self,
   auto& thr_which = thr_e.second.dbg_thr;
   switch(si.si_code) {
     case TRAP_TRACE: {
-      std::cerr << "there was a singlestep" << std::endl;
       SinglestepEvent evt { &self, &thr_which };
       if(handle_bp_event(self, thr_which, evt))
         return;
@@ -329,7 +327,6 @@ void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self,
     } break;
     
     case TRAP_BRKPT: {
-      std::cerr << "there was a breakpoint" << std::endl;
       BreakpointHitEvent evt { &self, &thr_which };
       if(!handle_bp_event(self, thr_which, evt))
         return;
@@ -407,20 +404,27 @@ void LocalDebuggee::Impl::notify_event(LocalDebuggee & self, T && evt)
   self.evt_emitter_.emit(std::forward<T>(evt));
 }
 
-std::unique_ptr<LocalDebuggee> LocalDebuggee::Impl::do_attach_child(process_id pid)
+std::unique_ptr<LocalDebuggee>
+  LocalDebuggee::Impl::do_attach_child(const LocalDebuggee & self, process_id pid)
 {
   if(pid != new_child_)
     throw std::invalid_argument("invalid child pid");
   
   LocalDebugProcess dbg_proc ( pid, DebugProcess::OpenFlags::AllAccess );
-  std::unique_ptr<LocalDebuggee> dbg_ptr ( new LocalDebuggee(std::move(dbg_proc), dbg_flags_) );
+  std::unique_ptr<LocalDebuggee> dbg_ptr ( new LocalDebuggee(self, std::move(dbg_proc)) );
   
   child_detach_ = false;
   return dbg_ptr;
 }
 
-LocalDebuggee::LocalDebuggee(LocalDebugProcess && proc, int flags)
-  : pimpl_( new Impl(*this, std::move(proc), flags) ) {}
+LocalDebuggee::LocalDebuggee(LocalDebugProcess && dbg_proc, int dbg_flags)
+  : dbg_flags_( dbg_flags )
+  , pimpl_( new Impl(std::move(dbg_proc), dbg_flags) ) {}
+
+LocalDebuggee::LocalDebuggee(const LocalDebuggee & parent, LocalDebugProcess && dbg_proc)
+  : dbg_flags_( parent.dbg_flags_ )
+  , evt_emitter_( parent.evt_emitter_ )
+  , pimpl_( new Impl(std::move(dbg_proc), dbg_flags_) ) {}
 
 LocalDebuggee::LocalDebuggee(LocalDebuggee &&) = default;
 
@@ -544,7 +548,7 @@ void LocalDebuggee::remove_all_bps()
 
 std::unique_ptr<Debuggee> LocalDebuggee::attach_child(process_id pid) const
 {
-  return pimpl_->do_attach_child(pid);
+  return pimpl_->do_attach_child(*this, pid);
 }
 
 std::unique_ptr<LocalDebuggee> dbg_exec(const ExecParams & params, unsigned int flags)

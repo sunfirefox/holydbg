@@ -27,32 +27,16 @@ std::unique_ptr<BinaryFormat> make_elf_image(const DebugProcess & dbg_proc, std:
 
 bool elf_check_image(const DebugProcess & dbg_proc, std::uintptr_t base)
 {
-  std::uint8_t img_elfmag[SELFMAG];
-  dbg_proc.read_mem(base, SELFMAG, img_elfmag);
+  std::uint8_t img_elfmag[ SELFMAG ];
+  dbg_proc.read_mem(base, sizeof(img_elfmag), img_elfmag);
   return std::equal(std::begin(img_elfmag), std::end(img_elfmag), ELFMAG);
 }
-
-namespace detail {
-
-std::string rem_load_str(const DebugProcess & proc, std::uintptr_t addr)
-{
-  unsigned int offs = 0;
-  std::ostringstream oss;
-  char c;
-  do {
-    proc.read_mem(addr + offs, sizeof(char), &c);
-    oss << c;
-    ++offs;
-  } while(c != '\0');
-  return oss.str();
-}
-
-} // namespace detail
 
 template <>
 Elf32_Ehdr le_load(const void * from)
 {
   const auto bytes = reinterpret_cast<const std::uint8_t *>(from);
+  
   Elf32_Ehdr ehdr;
   le_load_into(bytes + offsetof(Elf32_Ehdr, e_ident), ehdr.e_ident);
   le_load_into(bytes + offsetof(Elf32_Ehdr, e_type), ehdr.e_type);
@@ -75,6 +59,7 @@ template <>
 Elf64_Ehdr le_load(const void * from)
 {
   const auto bytes = reinterpret_cast<const std::uint8_t *>(from);
+  
   Elf64_Ehdr ehdr;
   le_load_into(bytes + offsetof(Elf64_Ehdr, e_ident), ehdr.e_ident);
   le_load_into(bytes + offsetof(Elf64_Ehdr, e_type), ehdr.e_type);
@@ -92,5 +77,56 @@ Elf64_Ehdr le_load(const void * from)
   le_load_into(bytes + offsetof(Elf64_Ehdr, e_shstrndx), ehdr.e_shstrndx);
   return ehdr;
 }
+
+template <>
+Elf32_Phdr le_load(const void * from)
+{
+  const auto bytes = reinterpret_cast<const std::uint8_t *>(from);
+  
+  Elf32_Phdr phdr;
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_type), phdr.p_type);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_offset), phdr.p_offset);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_vaddr), phdr.p_vaddr);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_paddr), phdr.p_paddr);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_filesz), phdr.p_filesz);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_memsz), phdr.p_memsz);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_flags), phdr.p_flags);
+  le_load_into(bytes + offsetof(Elf32_Phdr, p_align), phdr.p_align);
+  return phdr;
+}
+
+template <>
+Elf64_Phdr le_load(const void * from)
+{
+  const auto bytes = reinterpret_cast<const std::uint8_t *>(from);
+  
+  Elf64_Phdr phdr;
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_type), phdr.p_type);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_flags), phdr.p_flags);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_offset), phdr.p_offset);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_vaddr), phdr.p_vaddr);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_paddr), phdr.p_paddr);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_filesz), phdr.p_filesz);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_memsz), phdr.p_memsz);
+  le_load_into(bytes + offsetof(Elf64_Phdr, p_align), phdr.p_align);
+  return phdr;
+}
+
+namespace detail {
+
+std::string rem_load_str(const DebugProcess & dbg_proc, std::uintptr_t addr)
+{
+  std::ostringstream oss;
+  unsigned int offs = 0;
+  char c;
+  do {
+    dbg_proc.read_mem(addr + offs, sizeof(char), &c);
+    oss << c;
+    ++offs;
+  } while(c != '\0');
+  return oss.str();
+}
+
+} // namespace detail
 
 } // namespace hdbg

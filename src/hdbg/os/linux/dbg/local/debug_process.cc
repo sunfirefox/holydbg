@@ -56,17 +56,17 @@ struct LocalDebugProcess::Impl
   Impl(process_id pid, int dbg_flags);
   ~Impl();
   
-  process_id pid_;
-  std::uintptr_t base_addr_;
-  int fdmem_;
+  const process_id pid_;
+  const std::uintptr_t base_addr_;
+  const int fdmem_;
 };
 
-LocalDebugProcess::Impl::Impl(process_id proc_id, int dbg_flags)
+LocalDebugProcess::Impl::Impl(process_id proc_id, int flags)
   : pid_( proc_id )
   , base_addr_( enum_mempages(proc_id).begin()->base )
-  , fdmem_([proc_id, dbg_flags] {
+  , fdmem_([proc_id, flags] {
       const std::string mem_path = proc_mem_path(proc_id);
-      const int op_mem_flags = open_mem_flags(dbg_flags);
+      const int op_mem_flags = open_mem_flags(flags);
       const int fdmem = ::open(mem_path.c_str(), op_mem_flags);
       if(fdmem == -1)
         throw std::system_error(errno, std::system_category());
@@ -75,8 +75,7 @@ LocalDebugProcess::Impl::Impl(process_id proc_id, int dbg_flags)
 
 LocalDebugProcess::Impl::~Impl()
 {
-  if(fdmem_ != -1)
-    ::close(fdmem_);
+  ::close(fdmem_);
 }
 
 LocalDebugProcess::LocalDebugProcess(process_id pid, int flags)

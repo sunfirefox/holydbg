@@ -19,9 +19,7 @@ namespace {
 ArchServices & process_arch_services(const DebugProcess & dbg_proc)
 {
   const auto proc_img = binfmt_from_image(dbg_proc, dbg_proc.image_base());
-  assert( proc_img );
   const auto proc_arch = proc_img->arch();
-  assert( proc_arch );
   return get_arch_services(proc_arch);
 }
 

@@ -12,7 +12,8 @@ class HDBG_EXPORT BinaryFormat
 public:
   virtual ~BinaryFormat() = default;
   virtual const char * arch() const = 0;
-  virtual std::uintptr_t entry() const = 0;
+  virtual std::uintptr_t preferred_base() const = 0;
+  virtual std::ptrdiff_t entry() const = 0;
 };
 
 } // namespace hdbg

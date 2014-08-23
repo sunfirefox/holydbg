@@ -48,6 +48,9 @@ public:
   virtual std::unique_ptr<Debuggee> attach_child(process_id pid) const override;
   
 private:
+  LocalDebuggee(const LocalDebuggee & parent, LocalDebugProcess && dbg_proc);
+  
+  unsigned int dbg_flags_;
   DebugEventEmitter evt_emitter_;
   BreakpointManager bp_mgr_;
   
