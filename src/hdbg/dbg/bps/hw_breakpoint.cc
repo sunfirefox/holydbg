@@ -28,7 +28,7 @@ ArchServices & process_arch_services(const DebugProcess & dbg_proc)
 } // namespace
 
 HwBreakpoint::HwBpxDbgEvtListener::HwBpxDbgEvtListener(HwBreakpoint & hw_bpx)
-  : hw_bpx_(hw_bpx) {}
+  : hw_bpx_( hw_bpx ) {}
 
 void HwBreakpoint::HwBpxDbgEvtListener::handle_event(const ThreadCreatedEvent & dbg_evt)
 {
@@ -63,8 +63,7 @@ void HwBreakpoint::cleanup(Debuggee & debuggee)
 bool HwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_ctx) const
 {
   auto& arch_svc = process_arch_services( dbg_thr.process() );
-  const auto ip_idx = arch_svc.reg_index("inst-ptr");
-  return thr_ctx.reg_value<std::uintptr_t>(ip_idx) == addr_;
+  return arch_svc.get_inst_ptr(thr_ctx) == addr_;
 }
 
 void HwBreakpoint::rewind(DebugThread & , ThreadContext & ) const {}

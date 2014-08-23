@@ -12,9 +12,20 @@ public:
   X64_ArchServices();
   virtual ~X64_ArchServices();
   
-  virtual unsigned int reg_index(const char * reg_tag) const override;
   virtual const RegInfo & reg_info(unsigned int reg_idx) const override;
   virtual const std::vector<RegCategoryInfo> & reg_categories() const override;
+  
+  virtual std::uintptr_t get_inst_ptr(const ThreadContext & thr_ctx) const override;
+  virtual void set_inst_ptr(ThreadContext & thr_ctx, std::uintptr_t value) const override;
+  
+  virtual std::uintptr_t get_stack_ptr(const ThreadContext & thr_ctx) const override;
+  virtual void set_stack_ptr(ThreadContext & thr_ctx, std::uintptr_t value) const override;
+  
+  virtual std::uintptr_t get_stack_base(const ThreadContext & thr_ctx) const override;
+  virtual void set_stack_base(ThreadContext & thr_ctx, std::uintptr_t value) const override;
+  
+  virtual unsigned int get_flag(const ThreadContext & thr_ctx, unsigned int flg_idx) const override;
+  virtual void set_flag(ThreadContext & thr_ctx, unsigned int flg_idx, unsigned int value) const override;
   
   virtual ArchInternals & get_internals() const override;
 };

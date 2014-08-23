@@ -368,9 +368,6 @@ typedef struct {
 /* Return code of the decoding function. */
 typedef enum { DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, DECRES_FILTERED } D3_DecodeResult;
 
-/* Define the following interface functions only for outer projects. */
-#if !(defined(DISTORM_STATIC) || defined(DISTORM_DYNAMIC))
-
 /* distorm_decode
  * Input:
  *         offset - Origin of the given code (virtual address that is), NOT an offset in code.
@@ -389,34 +386,53 @@ typedef enum { DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, D
  * Notes:  1)The minimal size of maxInstructions is 15.
  *         2)You will have to synchronize the offset,code and length by yourself if you pass code fragments and not a complete code block!
  */
-#ifdef DISTORM_SUPPORT_64BIT_OFFSET
-	
-	DISTORM_EXPORT D3_DecodeResult distorm_decompose64(D3_CodeInfo* ci, D3_DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
-	#define distorm_decompose distorm_decompose64
-	
-#ifndef DISTORM_DISABLE_FORMAT_CAPABILITIES
-	
-	/* If distorm-remove-format-capabilities is defined, we won't export these text-formatting functionality. */
-	DISTORM_EXPORT D3_DecodeResult distorm_decode64(D3_OffsetType codeOffset, const unsigned char* code, int codeLen, D3_DecodeType dt, D3_DecodedInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
-	void distorm_format64(const D3_CodeInfo* ci, const D3_DInst* di, D3_DecodedInst* result);
-	#define distorm_decode distorm_decode64
-	#define distorm_format distorm_format64
-	
-#endif /* DISTORM_DISABLE_FORMAT_CAPABILITIES */
-	
-#else /* DISTORM_SUPPORT_64BIT_OFFSET */
-	
-	DISTORM_EXPORT D3_DecodeResult distorm_decompose32(D3_CodeInfo* ci, D3_DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
-	#define distorm_decompose distorm_decompose32
-	
-#ifndef DISTORM_DISABLE_FORMAT_CAPABILITIES
-	/* If distorm-remove-format-capabilities is defined, we won't export these text-formatting functionality. */
-	DISTORM_EXPORT D3_DecodeResult distorm_decode32(D3_OffsetType codeOffset, const unsigned char* code, int codeLen, D3_DecodeType dt, D3_DecodedInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
-	void distorm_format32(const D3_CodeInfo* ci, const D3_DInst* di, D3_DecodedInst* result);
-	#define distorm_decode distorm_decode32
-	#define distorm_format distorm_format32
-#endif /* DISTORM_DISABLE_FORMAT_CAPABILITIES */
 
+#ifdef DISTORM_SUPPORT_64BIT_OFFSET
+  
+  DISTORM_EXPORT D3_DecodeResult distorm_decompose64(D3_CodeInfo* ci,
+                                                     D3_DInst result[],
+                                                     unsigned int maxInstructions,
+                                                     unsigned int * usedInstructionsCount);
+  #define distorm_decompose distorm_decompose64
+  
+  #ifndef DISTORM_DISABLE_FORMAT_CAPABILITIES
+    
+    /* If distorm-remove-format-capabilities is defined, we won't export these text-formatting functionality. */
+    DISTORM_EXPORT D3_DecodeResult distorm_decode64(D3_OffsetType codeOffset,
+                                                    const unsigned char * code,
+                                                    int codeLen,
+                                                    D3_DecodeType dt,
+                                                    D3_DecodedInst result[],
+                                                    unsigned int maxInstructions,
+                                                    unsigned int * usedInstructionsCount);
+    void distorm_format64(const D3_CodeInfo* ci, const D3_DInst* di, D3_DecodedInst* result);
+    #define distorm_decode distorm_decode64
+    #define distorm_format distorm_format64
+    
+  #endif /* DISTORM_DISABLE_FORMAT_CAPABILITIES */
+  
+#else /* DISTORM_SUPPORT_64BIT_OFFSET */
+  
+  DISTORM_EXPORT D3_DecodeResult distorm_decompose32(D3_CodeInfo* ci,
+                                                     D3_DInst result[],
+                                                     unsigned int maxInstructions,
+                                                     unsigned int * usedInstructionsCount);
+  #define distorm_decompose distorm_decompose32
+  
+  #ifndef DISTORM_DISABLE_FORMAT_CAPABILITIES
+    /* If distorm-remove-format-capabilities is defined, we won't export these text-formatting functionality. */
+    DISTORM_EXPORT D3_DecodeResult distorm_decode32(D3_OffsetType codeOffset,
+                                                    const unsigned char * code,
+                                                    int codeLen,
+                                                    D3_DecodeType dt,
+                                                    D3_DecodedInst result[],
+                                                    unsigned int maxInstructions,
+                                                    unsigned int * usedInstructionsCount);
+    void distorm_format32(const D3_CodeInfo* ci, const D3_DInst* di, D3_DecodedInst* result);
+    #define distorm_decode distorm_decode32
+    #define distorm_format distorm_format32
+  #endif /* DISTORM_DISABLE_FORMAT_CAPABILITIES */
+  
 #endif
 
 /*
@@ -427,8 +443,6 @@ typedef enum { DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, D
  * Output: unsigned int - version of compiled library.
  */
 DISTORM_EXPORT unsigned int distorm_version();
-
-#endif /* DISTORM_STATIC */
 
 #ifdef __cplusplus
 } /* End Of Extern */

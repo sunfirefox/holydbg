@@ -27,7 +27,27 @@ inline bool operator!=(const ThreadEntry & lhs, const ThreadEntry & rhs)
   return !(lhs == rhs);
 }
 
-class ThreadIterator;
+class ThreadRange;
+
+class HDBG_EXPORT ThreadIterator
+  : public boost::iterator_facade< ThreadIterator,
+                                   const ThreadEntry,
+                                   std::input_iterator_tag >
+{
+  friend class boost::iterator_core_access;
+  
+public:
+  ThreadIterator();
+  explicit ThreadIterator(ThreadRange &);
+  
+private:
+  void increment();
+  bool equal(const ThreadIterator &) const;
+  const ThreadEntry& dereference() const;
+  
+  ThreadRange * thr_rng_ = nullptr;
+  ThreadEntry thr_entry_;
+};
 
 class HDBG_EXPORT ThreadRange
 {
@@ -48,26 +68,6 @@ public:
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl_;
-};
-
-class HDBG_EXPORT ThreadIterator
-  : public boost::iterator_facade< ThreadIterator,
-                                   const ThreadEntry,
-                                   std::input_iterator_tag >
-{
-  friend class boost::iterator_core_access;
-  
-public:
-  ThreadIterator();
-  explicit ThreadIterator(ThreadRange &);
-  
-private:
-  void increment();
-  bool equal(const ThreadIterator &) const;
-  const ThreadEntry& dereference() const;
-  
-  const ThreadRange * thr_rng_ = nullptr;
-  ThreadEntry thr_entry_;
 };
 
 inline ThreadRange enum_threads(process_id pid)

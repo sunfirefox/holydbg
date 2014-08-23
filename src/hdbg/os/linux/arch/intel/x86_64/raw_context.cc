@@ -2,7 +2,8 @@
 
 #include <hdbg/dbg/thread_context.hpp>
 #include <hdbg/dbg/local/debug_thread.hpp>
-#include <hdbg/arch/x86_64/reg_ids.hpp>
+
+#include "../../../../../arch/intel/x86_64/reg_ids.hpp"
 
 #include <sys/ptrace.h>
 

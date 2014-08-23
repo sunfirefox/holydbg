@@ -11,6 +11,7 @@ if(HOLYDBG_BUILD_TESTS)
   include_directories(gtest-1.7.0/include)
 endif(HOLYDBG_BUILD_TESTS)
 
+set(DISTORM_STATIC ON)
 add_subdirectory(distorm)
 include_directories(distorm/include)
 

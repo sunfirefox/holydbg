@@ -56,29 +56,10 @@ void ThreadRange::Impl::build_entry(ThreadEntry & thr_e)
   thr_e.tid = std::stol(thr_dname);
 }
 
-ThreadRange::ThreadRange(process_id pid) : pimpl_( new Impl(pid) ) {}
-
-ThreadRange::ThreadRange(const ThreadRange & thr_rng)
-  : pimpl_( new Impl(*thr_rng.pimpl_) ) {}
-
-ThreadRange::ThreadRange(ThreadRange &&) = default;
-
-ThreadRange::~ThreadRange() = default;
-
-ThreadIterator ThreadRange::begin()
-{
-  return ThreadIterator(*this);
-}
-
-ThreadIterator ThreadRange::end()
-{
-  return ThreadIterator();
-}
-
 ThreadIterator::ThreadIterator() : thr_rng_(nullptr) {}
 
 ThreadIterator::ThreadIterator(ThreadRange & thr_rng)
-  : thr_rng_(&thr_rng)
+  : thr_rng_( &thr_rng )
 {
   if(!thr_rng_->pimpl_->first(thr_entry_))
     thr_rng_ = nullptr;
@@ -100,6 +81,25 @@ const ThreadEntry & ThreadIterator::dereference() const
 {
   assert(thr_rng_);
   return thr_entry_;
+}
+
+ThreadRange::ThreadRange(process_id pid) : pimpl_( new Impl(pid) ) {}
+
+ThreadRange::ThreadRange(const ThreadRange & thr_rng)
+  : pimpl_( new Impl(*thr_rng.pimpl_) ) {}
+
+ThreadRange::ThreadRange(ThreadRange &&) = default;
+
+ThreadRange::~ThreadRange() = default;
+
+ThreadIterator ThreadRange::begin()
+{
+  return ThreadIterator(*this);
+}
+
+ThreadIterator ThreadRange::end()
+{
+  return ThreadIterator();
 }
 
 } // namespace hdbg

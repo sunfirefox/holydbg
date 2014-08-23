@@ -1,5 +1,5 @@
-#ifndef __HDBG_ARCH_X86_64_REG_IDS_HPP__
-#define __HDBG_ARCH_X86_64_REG_IDS_HPP__
+#ifndef __HDBG_SRC_ARCH_INTEL_X86_64_REG_IDS_HPP__
+#define __HDBG_SRC_ARCH_INTEL_X86_64_REG_IDS_HPP__
 
 namespace hdbg {
 
@@ -18,9 +18,20 @@ enum {
   
   // debug regs
   X64_RegDr0, X64_RegDr1, X64_RegDr2, X64_RegDr3,
-  X64_RegDr4, X64_RegDr5, X64_RegDr6, X64_RegDr7
+  X64_RegDr4, X64_RegDr5, X64_RegDr6, X64_RegDr7,
+};
+
+enum {
+  // flags
+  X64_FlgCf, X64_FlgPf, X64_FlgAf, X64_FlgZf,
+  X64_FlgSf, X64_FlgTf, X64_FlgIf, X64_FlgDf,
+  X64_FlgOf, X64_FlgIopl, X64_FlgNt,
+  
+  // eflags
+  X64_FlgRf, X64_FlgVm, X64_FlgAc, X64_FlgVif,
+  X64_FlgVip, X64_FlgId,
 };
 
 } // namespace hdbg
 
-#endif // __HDBG_ARCH_X86_64_REG_IDS_HPP__
+#endif // __HDBG_SRC_ARCH_INTEL_X86_64_REG_IDS_HPP__

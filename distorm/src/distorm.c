@@ -356,7 +356,7 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 	_DInst di;
 	_CodeInfo ci;
 	unsigned int instsCount = 0, i;
-
+	
 	*usedInstructionsCount = 0;
 
 	/* I use codeLen as a signed variable in order to ease detection of underflow... and besides - */
@@ -379,7 +379,7 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 
 	/*
 	 * We have to format the result into text. But the interal decoder works with the new structure of _DInst.
-	 * Therefore, we will pass the result array(!) from the caller and the interal decoder will fill it in with _DInst's.
+	 * Therefore, we will pass the result array(!) from the caller and the internal decoder will fill it in with _DInst's.
 	 * Then we will copy each result to a temporary structure, and use it to reformat that specific result.
 	 *
 	 * This is all done to save memory allocation and to work on the same result array in-place!!!

@@ -51,17 +51,15 @@ void SwBreakpoint::cleanup(Debuggee & debuggee)
 bool SwBreakpoint::match(const DebugThread & dbg_thr, const ThreadContext & thr_ctx) const
 {
   auto& arch_svc = process_arch_services( dbg_thr.process() );
-  const auto ip_idx = arch_svc.reg_index("inst-ptr");
-  const auto thr_ip = thr_ctx.reg_value<std::uintptr_t>(ip_idx);
-  return thr_ip - ov_data_.size() == addr_;
+  const auto iptr = arch_svc.get_inst_ptr(thr_ctx);
+  return iptr - ov_data_.size() == addr_;
 }
 
 void SwBreakpoint::rewind(DebugThread & dbg_thr, ThreadContext & thr_ctx) const
 {
   auto& arch_svc = process_arch_services( dbg_thr.process() );
-  const int ip_idx = arch_svc.reg_index("inst-ptr");
-  const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx);
-  thr_ctx.set_reg(ip_idx, ip_at - ov_data_.size());
+  const auto iptr = arch_svc.get_inst_ptr(thr_ctx);
+  arch_svc.set_inst_ptr(thr_ctx, iptr - ov_data_.size());
   dbg_thr.set_context(thr_ctx);
 }
 

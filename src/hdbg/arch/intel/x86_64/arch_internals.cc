@@ -1,8 +1,8 @@
 #include "arch_internals.hpp"
 
 #include <hdbg/dbg/thread_context.hpp>
-#include <hdbg/arch/x86_64/reg_ids.hpp>
 
+#include "reg_ids.hpp"
 #include "raw_context.hpp"
 #include "../debug_control_reg.hpp"
 

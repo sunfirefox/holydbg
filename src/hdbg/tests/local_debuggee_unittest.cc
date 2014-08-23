@@ -12,6 +12,19 @@
 #include <cstdint>
 #include <memory>
 
+class LocalDebuggeeTest
+  : public ::testing::Test
+{
+public:
+  LocalDebuggeeTest();
+  virtual ~LocalDebuggeeTest();
+  
+  std::unique_ptr<hdbg::LocalDebuggee> debuggee_;
+  hdbg::DebugProcess & dbg_proc_;
+  std::uintptr_t entry_pt_;
+  hdbg::ArchServices & arch_svc_;
+};
+
 namespace {
 
 hdbg::ArchServices & process_arch_services(const hdbg::DebugProcess & dbg_proc)
@@ -33,20 +46,6 @@ std::uintptr_t process_entry_point(const hdbg::DebugProcess & dbg_proc)
 
 } // namespace
 
-class LocalDebuggeeTest
-  : public ::testing::Test
-{
-public:
-  LocalDebuggeeTest();
-  virtual ~LocalDebuggeeTest();
-  
-  std::unique_ptr<hdbg::Debuggee> debuggee_;
-  hdbg::DebugProcess & dbg_proc_;
-  std::uintptr_t entry_pt_;
-  hdbg::ArchServices & arch_svc_;
-  unsigned int ip_idx_;
-};
-
 LocalDebuggeeTest::LocalDebuggeeTest()
   : debuggee_([]{
       hdbg::ExecParams ep;
@@ -55,10 +54,12 @@ LocalDebuggeeTest::LocalDebuggeeTest()
     }())
   , dbg_proc_( debuggee_->process() )
   , entry_pt_( process_entry_point(dbg_proc_) )
-  , arch_svc_( process_arch_services(dbg_proc_) )
-  , ip_idx_ ( arch_svc_.reg_index("inst-ptr") ) {}
+  , arch_svc_( process_arch_services(dbg_proc_) ) {}
 
-LocalDebuggeeTest::~LocalDebuggeeTest() = default;
+LocalDebuggeeTest::~LocalDebuggeeTest()
+{
+  assert( !debuggee_->attached() );
+}
 
 TEST_F(LocalDebuggeeTest, DbgExecRun) {
   ASSERT_NO_THROW(debuggee_->run());
@@ -73,8 +74,8 @@ TEST_F(LocalDebuggeeTest, SetSwBpx) {
       EXPECT_EQ(bpx_id, bp_id);
       auto& dbg_proc = debuggee.process();
       EXPECT_EQ(&dbg_proc, &dbg_proc_);
-      const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx_);
-      EXPECT_EQ(entry_pt_, ip_at);
+      const auto iptr = arch_svc_.get_inst_ptr(thr_ctx);
+      EXPECT_EQ(entry_pt_, iptr);
       ++bp_hits;
     });
   debuggee_->run();
@@ -90,8 +91,8 @@ TEST_F(LocalDebuggeeTest, SetHwBpx) {
       EXPECT_EQ(bpx_id, bp_id);
       auto& dbg_proc = debuggee.process();
       EXPECT_EQ(&dbg_proc, &dbg_proc_);
-      const auto ip_at = thr_ctx.reg_value<std::uintptr_t>(ip_idx_);
-      EXPECT_EQ(entry_pt_, ip_at);
+      const auto iptr = arch_svc_.get_inst_ptr(thr_ctx);
+      EXPECT_EQ(entry_pt_, iptr);
       ++bp_hits;
     });
   debuggee_->run();

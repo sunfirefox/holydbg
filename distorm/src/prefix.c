@@ -128,7 +128,7 @@ uint16_t prefixes_set_unused_mask(_PrefixState* ps)
  * Mark a prefix as unused, and bookkeep where we last saw this same type,
  * because in the future we might want to disable it too.
  */
-DISTORM_INLINE void prefixes_track_unused(_PrefixState* ps, int index, _PrefixIndexer pi)
+DISTORM_INLINE void prefixes_track_unused(_PrefixState * ps, int index, _PrefixIndexer pi)
 {
 	prefixes_ignore(ps, pi);
 	/* Book-keep the current index for this type. */

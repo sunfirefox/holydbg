@@ -3,6 +3,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 
+#include <cassert>
 #include <cctype>
 #include <fstream>
 #include <iterator>
@@ -79,24 +80,6 @@ void ProcessRange::Impl::build_entry(ProcessEntry & proc_e)
   proc_e.name = proc_name(proc_e.pid);
 }
 
-ProcessRange::ProcessRange() : pimpl_( new Impl ) {}
-
-ProcessRange::ProcessRange(const ProcessRange &)
-  : pimpl_( new Impl(*pimpl_) ) {}
-
-ProcessRange::ProcessRange(ProcessRange &&) = default;
-ProcessRange::~ProcessRange() = default;
-
-ProcessIterator ProcessRange::begin()
-{
-  return ProcessIterator(*this);
-}
-
-ProcessIterator ProcessRange::end()
-{
-  return ProcessIterator();
-}
-
 ProcessIterator::ProcessIterator() : proc_rng_(nullptr) {}
 
 ProcessIterator::ProcessIterator(ProcessRange & proc_rng)
@@ -123,6 +106,24 @@ const ProcessEntry & ProcessIterator::dereference() const
 {
   assert(proc_rng_);
   return proc_entry_;
+}
+
+ProcessRange::ProcessRange() : pimpl_( new Impl ) {}
+
+ProcessRange::ProcessRange(const ProcessRange &)
+  : pimpl_( new Impl(*pimpl_) ) {}
+
+ProcessRange::ProcessRange(ProcessRange &&) = default;
+ProcessRange::~ProcessRange() = default;
+
+ProcessIterator ProcessRange::begin()
+{
+  return ProcessIterator(*this);
+}
+
+ProcessIterator ProcessRange::end()
+{
+  return ProcessIterator();
 }
 
 } // namespace hdbg

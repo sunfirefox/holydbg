@@ -73,28 +73,10 @@ void MemPageRange::Impl::build_entry(MemPageEntry & mpage_e)
   mpage_e.name  = maps_pathname;
 }
 
-MemPageRange::MemPageRange(process_id pid) : pimpl_( new Impl(pid) ) {}
-
-MemPageRange::MemPageRange(const MemPageRange & mpage_rng)
-  : pimpl_( new Impl(*mpage_rng.pimpl_) ) {}
-
-MemPageRange::MemPageRange(MemPageRange &&) = default;
-MemPageRange::~MemPageRange() = default;
-
-MemPageIterator MemPageRange::begin()
-{
-  return MemPageIterator(*this);
-}
-
-MemPageIterator MemPageRange::end()
-{
-  return MemPageIterator();
-}
-
 MemPageIterator::MemPageIterator() : mpage_rng_(nullptr) {}
 
 MemPageIterator::MemPageIterator(MemPageRange & mpage_rng)
-  : mpage_rng_(&mpage_rng)
+  : mpage_rng_( &mpage_rng )
 {
   if(!mpage_rng_->pimpl_->first(mpage_entry_))
     mpage_rng_ = nullptr;
@@ -116,6 +98,24 @@ const MemPageEntry & MemPageIterator::dereference() const
 {
   assert(mpage_rng_);
   return mpage_entry_;
+}
+
+MemPageRange::MemPageRange(process_id pid) : pimpl_( new Impl(pid) ) {}
+
+MemPageRange::MemPageRange(const MemPageRange & mpage_rng)
+  : pimpl_( new Impl(*mpage_rng.pimpl_) ) {}
+
+MemPageRange::MemPageRange(MemPageRange &&) = default;
+MemPageRange::~MemPageRange() = default;
+
+MemPageIterator MemPageRange::begin()
+{
+  return MemPageIterator(*this);
+}
+
+MemPageIterator MemPageRange::end()
+{
+  return MemPageIterator();
 }
 
 } // namespace hdbg

@@ -43,7 +43,27 @@ inline bool operator!=(const MemPageEntry & lhs, const MemPageEntry & rhs)
   return !(lhs == rhs);
 }
 
-class MemPageIterator;
+class MemPageRange;
+
+class HDBG_EXPORT MemPageIterator
+  : public boost::iterator_facade< MemPageIterator,
+                                   const MemPageEntry,
+                                   std::input_iterator_tag >
+{
+  friend class boost::iterator_core_access;
+  
+public:
+  MemPageIterator();
+  explicit MemPageIterator(MemPageRange &);
+  
+private:
+  void increment();
+  bool equal(const MemPageIterator &) const;
+  const MemPageEntry & dereference() const;
+  
+  MemPageRange * mpage_rng_ = nullptr;
+  MemPageEntry mpage_entry_;
+};
 
 class HDBG_EXPORT MemPageRange
 {
@@ -64,26 +84,6 @@ public:
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl_;
-};
-
-class HDBG_EXPORT MemPageIterator
-  : public boost::iterator_facade< MemPageIterator,
-                                   const MemPageEntry,
-                                   std::input_iterator_tag >
-{
-  friend class boost::iterator_core_access;
-  
-public:
-  MemPageIterator();
-  explicit MemPageIterator(MemPageRange &);
-  
-private:
-  void increment();
-  bool equal(const MemPageIterator &) const;
-  const MemPageEntry & dereference() const;
-  
-  MemPageRange * mpage_rng_ = nullptr;
-  MemPageEntry mpage_entry_;
 };
 
 inline MemPageRange enum_mempages(process_id pid)

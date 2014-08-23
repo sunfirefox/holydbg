@@ -88,8 +88,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   #define DISTORM_DLLEXPORT __attribute__((visibility("default")))
   #define DISTORM_DLLIMPORT __attribute__((visibility("default")))
   
-  #define DISTORM_FASTCALL /* __attribute__((fastcall)) */
-  #define DISTORM_INLINE inline
+  #define DISTORM_FASTCALL  /* __attribute__((fastcall)) */
+  #define DISTORM_INLINE    static inline
   
 #elif defined( DISTORM_CC_MSVC )
   
