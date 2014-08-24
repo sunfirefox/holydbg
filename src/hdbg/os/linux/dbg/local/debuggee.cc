@@ -414,6 +414,7 @@ std::unique_ptr<LocalDebuggee>
   std::unique_ptr<LocalDebuggee> dbg_ptr ( new LocalDebuggee(self, std::move(dbg_proc)) );
   
   child_detach_ = false;
+  new_child_ = 0;
   return dbg_ptr;
 }
 
