@@ -27,7 +27,7 @@ public:
   void remove_listener(const std::shared_ptr<EventListener<Events...>> & sp_listener);
   
   template <typename Event>
-  void emit(const Event & event) const;
+  void emit_event(const Event & event) const;
   
 private:
   mutable std::vector<std::weak_ptr<EventListener<Events...>>> listeners_;
@@ -50,7 +50,7 @@ void EventEmitter<Events...>::remove_listener(const std::shared_ptr<EventListene
 }
 
 template <class... Events> template <class Event>
-void EventEmitter<Events...>::emit(const Event & event) const
+void EventEmitter<Events...>::emit_event(const Event & event) const
 {
   static_assert( detail::type_in<Event, Events...>(), "invalid event type");
   

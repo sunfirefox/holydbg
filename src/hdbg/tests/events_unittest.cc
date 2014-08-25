@@ -50,13 +50,13 @@ TEST(EventTest, AddEventListener) {
   auto listener = std::make_shared<FooBarListener>();
   emitter.add_listener(listener);
   
-  emitter.emit(FooEvent{});
+  emitter.emit_event(FooEvent{});
   ASSERT_TRUE(listener->called());
   
   listener->reset();
   ASSERT_FALSE(listener->called());
   
-  emitter.emit(BarEvent{});
+  emitter.emit_event(BarEvent{});
   EXPECT_TRUE(listener->called());
 }
 
@@ -66,7 +66,7 @@ TEST(EventTest, RemoveEventListener) {
   emitter.add_listener(listener);
   emitter.remove_listener(listener);
   
-  emitter.emit(FooEvent{});
+  emitter.emit_event(FooEvent{});
   ASSERT_FALSE(listener->called());
 }
 

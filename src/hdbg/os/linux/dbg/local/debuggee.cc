@@ -401,7 +401,7 @@ bool LocalDebuggee::Impl::handle_bp_event(LocalDebuggee & self,
 template <typename T>
 void LocalDebuggee::Impl::notify_event(LocalDebuggee & self, T && evt)
 {
-  self.evt_emitter_.emit(std::forward<T>(evt));
+  self.evt_emitter_.emit_event(std::forward<T>(evt));
 }
 
 std::unique_ptr<LocalDebuggee>

@@ -42,8 +42,8 @@ public:
   void set_reg(unsigned int reg_idx, const T & value);
   
 private:
-  void do_get_thread_context(const LocalDebugThread & dbg_thr);
-  void do_set_thread_context(LocalDebugThread & dbg_thr) const;
+  void obtain_from(const LocalDebugThread & dbg_thr);
+  void apply_to(LocalDebugThread & dbg_thr) const;
   
   std::unique_ptr<RawContext> raw_ctx_;
 };

@@ -28,7 +28,7 @@ ThreadContext::ThreadContext(const ThreadContext & ) {}
 ThreadContext::ThreadContext(ThreadContext && ) = default;
 ThreadContext::~ThreadContext() = default;
 
-void ThreadContext::do_get_thread_context(const LocalDebugThread & dbg_thr)
+void ThreadContext::obtain_from(const LocalDebugThread & dbg_thr)
 {
   const auto thr_arch = thread_arch(dbg_thr);
   if(!raw_ctx_ || !raw_ctx_->valid_for(thr_arch)) {
@@ -39,7 +39,7 @@ void ThreadContext::do_get_thread_context(const LocalDebugThread & dbg_thr)
   raw_ctx_->obtain_from(dbg_thr);
 }
 
-void ThreadContext::do_set_thread_context(LocalDebugThread & dbg_thr) const
+void ThreadContext::apply_to(LocalDebugThread & dbg_thr) const
 {
   if(raw_ctx_)
     raw_ctx_->apply_to(dbg_thr);

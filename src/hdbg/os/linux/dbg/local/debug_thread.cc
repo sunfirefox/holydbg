@@ -40,12 +40,12 @@ thread_id LocalDebugThread::id() const
 
 void LocalDebugThread::get_context(ThreadContext & thr_ctx) const
 {
-  thr_ctx.do_get_thread_context(*this);
+  thr_ctx.obtain_from(*this);
 }
 
 void LocalDebugThread::set_context(const ThreadContext & thr_ctx)
 {
-  thr_ctx.do_set_thread_context(*this);
+  thr_ctx.apply_to(*this);
 }
 
 } // namespace hdbg

@@ -33,7 +33,7 @@ struct ProcessExitedEvent
 struct ProcessKilledEvent
 {
   Debuggee * debuggee;
-  int term_code;
+  int term_sig;
 };
 
 struct ThreadCreatedEvent
