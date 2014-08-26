@@ -90,6 +90,7 @@ public:
   virtual ~X64_RawContext();
   
   virtual bool valid_for(const char * arch) const override;
+  virtual std::shared_ptr<RawContext> shared_clone() const override;
   
   virtual void obtain_from(const LocalDebugThread &) override;
   virtual void apply_to(LocalDebugThread &) const override;

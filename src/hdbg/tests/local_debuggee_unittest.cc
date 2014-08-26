@@ -66,7 +66,7 @@ TEST_F(LocalDebuggeeTest, SetSwBpx) {
   unsigned int bp_hits = 0;
   const hdbg::breakpoint_id bpx_id = debuggee_->set_bp(new hdbg::SwBreakpoint(entry_pt_),
     [this, &bpx_id, &bp_hits](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
-                              hdbg::ThreadContext & thr_ctx, hdbg::breakpoint_id bp_id)
+                              hdbg::ThreadContext thr_ctx, hdbg::breakpoint_id bp_id)
     {
       EXPECT_EQ(bpx_id, bp_id);
       auto& dbg_proc = debuggee.process();
@@ -83,7 +83,7 @@ TEST_F(LocalDebuggeeTest, SetHwBpx) {
   unsigned int bp_hits = 0;
   const hdbg::breakpoint_id bpx_id = debuggee_->set_bp(new hdbg::HwBreakpoint(entry_pt_),
     [this, &bpx_id, &bp_hits](hdbg::Debuggee & debuggee, hdbg::DebugThread & dbg_thr,
-                              hdbg::ThreadContext & thr_ctx, hdbg::breakpoint_id bp_id)
+                              hdbg::ThreadContext thr_ctx, hdbg::breakpoint_id bp_id)
     {
       EXPECT_EQ(bpx_id, bp_id);
       auto& dbg_proc = debuggee.process();

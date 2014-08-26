@@ -22,9 +22,7 @@ const char * thread_arch(const DebugThread & dbg_thr)
 } // namespace
 
 ThreadContext::ThreadContext() = default;
-
-ThreadContext::ThreadContext(const ThreadContext & ) {}
-
+ThreadContext::ThreadContext(const ThreadContext & ) = default;
 ThreadContext::ThreadContext(ThreadContext && ) = default;
 ThreadContext::~ThreadContext() = default;
 
@@ -35,6 +33,8 @@ void ThreadContext::obtain_from(const LocalDebugThread & dbg_thr)
     auto& arch_svc = get_arch_services(thr_arch);
     auto& arch_internl = arch_svc.get_internals();
     raw_ctx_ = arch_internl.make_raw_context();
+  } else if(raw_ctx_.use_count() > 1) { // cow
+    raw_ctx_ = raw_ctx_->shared_clone();
   }
   raw_ctx_->obtain_from(dbg_thr);
 }

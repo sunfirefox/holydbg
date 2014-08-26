@@ -25,6 +25,11 @@ bool X64_RawContext::valid_for(const char * arch) const
   return !std::strcmp(arch, "x86_64");
 }
 
+std::shared_ptr<RawContext> X64_RawContext::shared_clone() const
+{
+  return std::make_shared<X64_RawContext>(*this);
+}
+
 void X64_RawContext::obtain_from(const LocalDebugThread & dbg_thr)
 {
   if(::ptrace(PTRACE_GETREGS, dbg_thr.id(), nullptr, &usr_regs_) == -1)

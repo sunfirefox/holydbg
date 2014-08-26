@@ -15,7 +15,7 @@ class ArchInternals
 {
 public:
   virtual ~ArchInternals() = default;
-  virtual std::unique_ptr<RawContext> make_raw_context() const = 0;
+  virtual std::shared_ptr<RawContext> make_raw_context() const = 0;
   virtual const std::vector<std::uint8_t> & sw_bpx_template() const = 0;
   virtual const std::vector<unsigned int> & hw_bpx_reg_indexes() const = 0;
   virtual bool is_hw_bpx_reg_enabled(unsigned int reg_idx, const ThreadContext & thr_ctx) const = 0;

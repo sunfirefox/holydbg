@@ -4,6 +4,7 @@
 #include <hdbg/sys_types.hpp>
 #include <hdbg/dbg/breakpoint.hpp>
 #include <hdbg/dbg/debug_event.hpp>
+#include <hdbg/dbg/thread_context.hpp>
 
 #include <cstddef>
 #include <functional>
@@ -26,7 +27,7 @@ typedef unsigned int breakpoint_id;
 class HDBG_EXPORT Debuggee
 {
 public:
-  typedef std::function<void(Debuggee &, DebugThread &, ThreadContext &, breakpoint_id)> BpHandlerFn;
+  typedef std::function<void(Debuggee &, DebugThread &, ThreadContext, breakpoint_id)> BpHandlerFn;
   
   Debuggee();
   Debuggee(const Debuggee&) = delete;

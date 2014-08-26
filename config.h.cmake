@@ -10,7 +10,6 @@
 #define HOLYDBG_VERSION_PATCH(version) (((version) >>  0) & 0xff)
 
 #define LIBHDBG_VERSION HOLYDBG_MAKE_VERSION(0,2,0)
-#define HOLYDBG_VERSION HOLYDBG_MAKE_VERSION(0,0,0)
 
 #cmakedefine HOLYDBG_OS_WINDOWS
 #cmakedefine HOLYDBG_OS_LINUX

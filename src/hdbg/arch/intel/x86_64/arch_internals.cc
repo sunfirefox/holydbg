@@ -25,9 +25,9 @@ unsigned int reg_idx_to_dreg_offs(unsigned int reg_idx)
 X64_ArchInternals::X64_ArchInternals() = default;
 X64_ArchInternals::~X64_ArchInternals() = default;
 
-std::unique_ptr<RawContext> X64_ArchInternals::make_raw_context() const
+std::shared_ptr<RawContext> X64_ArchInternals::make_raw_context() const
 {
-  return std::unique_ptr<RawContext>( new X64_RawContext );
+  return std::make_shared<X64_RawContext>();
 }
 
 const std::vector<std::uint8_t>& X64_ArchInternals::sw_bpx_template() const

@@ -13,16 +13,12 @@
 #include <stdexcept>
 #include <vector>
 
-#include <iostream>
-
 namespace hdbg {
 
 class LocalDebugThread;
 
 class HDBG_EXPORT ThreadContext
 {
-  friend class LocalDebugThread;
-  
   template <typename T>
   static constexpr bool is_valid_reg_value()
   {
@@ -42,10 +38,11 @@ public:
   void set_reg(unsigned int reg_idx, const T & value);
   
 private:
+  friend class LocalDebugThread;
   void obtain_from(const LocalDebugThread & dbg_thr);
   void apply_to(LocalDebugThread & dbg_thr) const;
   
-  std::unique_ptr<RawContext> raw_ctx_;
+  std::shared_ptr<RawContext> raw_ctx_;
 };
 
 template <typename T>

@@ -12,7 +12,7 @@ public:
   X64_ArchInternals();
   virtual ~X64_ArchInternals();
   
-  virtual std::unique_ptr<RawContext> make_raw_context() const override;
+  virtual std::shared_ptr<RawContext> make_raw_context() const override;
   virtual const std::vector<std::uint8_t> & sw_bpx_template() const override;
   virtual const std::vector<unsigned int> & hw_bpx_reg_indexes() const override;
   virtual bool is_hw_bpx_reg_enabled(unsigned int reg_idx, const ThreadContext & thr_ctx) const override;
