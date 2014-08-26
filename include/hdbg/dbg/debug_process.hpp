@@ -10,6 +10,8 @@
 
 namespace hdbg {
 
+class BinaryFormat;
+
 class HDBG_EXPORT DebugProcess
 {
 public:
@@ -27,6 +29,7 @@ public:
   
   virtual process_id id() const = 0;
   virtual std::uintptr_t image_base() const = 0;
+  virtual const BinaryFormat & image() const = 0;
   
   virtual void kill(bool force = false) = 0;
   

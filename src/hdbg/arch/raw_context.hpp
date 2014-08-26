@@ -1,10 +1,11 @@
-#ifndef __HDBG_ARCH_RAW_CONTEXT_HPP__
-#define __HDBG_ARCH_RAW_CONTEXT_HPP__
+#ifndef __HDBG_SRC_ARCH_RAW_CONTEXT_HPP__
+#define __HDBG_SRC_ARCH_RAW_CONTEXT_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/arch/reg_value.hpp>
+
+#include <memory>
 
 #include <cstddef>
-#include <memory>
 #include <utility>
 
 namespace hdbg {
@@ -19,12 +20,12 @@ public:
   virtual std::unique_ptr<RawContext> clone() const = 0;
   virtual std::shared_ptr<RawContext> shared_clone() const = 0;
   
-  virtual bool valid_for(const char * arch) const = 0;
+  virtual bool valid_for(const LocalDebugThread &) const = 0;
   virtual void obtain_from(const LocalDebugThread &) = 0;
   virtual void apply_to(LocalDebugThread &) const = 0;
   
-  virtual std::pair<const void *, std::size_t> reg_addr(unsigned int reg_idx) const = 0;
-  std::pair<void *, std::size_t> reg_addr(unsigned int reg_idx);
+  virtual RegValue reg_value(unsigned int reg_idx) const = 0;
+  virtual void set_reg(unsigned int reg_idx, const RegValue & value) = 0;
 };
 
 } // namespace hdbg

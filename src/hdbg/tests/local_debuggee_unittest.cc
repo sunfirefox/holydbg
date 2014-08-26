@@ -21,27 +21,9 @@ public:
   
   std::unique_ptr<hdbg::LocalDebuggee> debuggee_;
   hdbg::DebugProcess & dbg_proc_;
-  std::uintptr_t entry_pt_;
   hdbg::ArchServices & arch_svc_;
+  std::uintptr_t entry_pt_;
 };
-
-namespace {
-
-hdbg::ArchServices & process_arch_services(const hdbg::DebugProcess & dbg_proc)
-{
-  const auto proc_img = hdbg::binfmt_from_image(dbg_proc, dbg_proc.image_base());
-  const auto proc_arch = proc_img->arch();
-  return hdbg::get_arch_services(proc_arch);
-}
-
-std::uintptr_t process_entry_point(const hdbg::DebugProcess & dbg_proc)
-{
-  const auto img_base = dbg_proc.image_base();
-  const auto proc_img = hdbg::binfmt_from_image(dbg_proc, img_base);
-  return dbg_proc.image_base() + proc_img->entry();
-}
-
-} // namespace
 
 LocalDebuggeeTest::LocalDebuggeeTest()
   : debuggee_([]{
@@ -50,8 +32,8 @@ LocalDebuggeeTest::LocalDebuggeeTest()
       return hdbg::dbg_exec(ep);
     }())
   , dbg_proc_( debuggee_->process() )
-  , entry_pt_( process_entry_point(dbg_proc_) )
-  , arch_svc_( process_arch_services(dbg_proc_) ) {}
+  , arch_svc_( hdbg::get_arch_services(dbg_proc_.image().arch()) )
+  , entry_pt_( dbg_proc_.image_base() + dbg_proc_.image().entry() ) {}
 
 LocalDebuggeeTest::~LocalDebuggeeTest()
 {

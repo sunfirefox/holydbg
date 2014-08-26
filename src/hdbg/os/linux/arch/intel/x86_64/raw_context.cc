@@ -1,9 +1,10 @@
 #include "../../../../../arch/intel/x86_64/raw_context.hpp"
+#include "../../../../../arch/intel/x86_64/reg_ids.hpp"
 
+#include <hdbg/binary_format.hpp>
+#include <hdbg/dbg/debug_process.hpp>
 #include <hdbg/dbg/thread_context.hpp>
 #include <hdbg/dbg/local/debug_thread.hpp>
-
-#include "../../../../../arch/intel/x86_64/reg_ids.hpp"
 
 #include <sys/ptrace.h>
 
@@ -30,9 +31,11 @@ std::shared_ptr<RawContext> X64_RawContext::shared_clone() const
   return std::make_shared<X64_RawContext>(*this);
 }
 
-bool X64_RawContext::valid_for(const char * arch) const
+bool X64_RawContext::valid_for(const LocalDebugThread & dbg_thr) const
 {
-  return !std::strcmp(arch, "x86_64");
+  const auto& dbg_proc = dbg_thr.process();
+  const auto& proc_img = dbg_proc.image();
+  return !std::strcmp("x86_64", proc_img.arch());
 }
 
 void X64_RawContext::obtain_from(const LocalDebugThread & dbg_thr)
@@ -76,52 +79,108 @@ void X64_RawContext::apply_to(LocalDebugThread & dbg_thr) const
   }
 }
 
-std::pair<const void *, std::size_t> X64_RawContext::reg_addr(unsigned int reg_idx) const
+RegValue X64_RawContext::reg_value(unsigned int reg_idx) const
 {
   switch(reg_idx) {
-    case X64_RegRax: return std::make_pair(&usr_regs_.rax, 8);
-    case X64_RegRbx: return std::make_pair(&usr_regs_.rbx, 8);
-    case X64_RegRcx: return std::make_pair(&usr_regs_.rcx, 8);
-    case X64_RegRdx: return std::make_pair(&usr_regs_.rdx, 8);
-    case X64_RegRsi: return std::make_pair(&usr_regs_.rsi, 8);
-    case X64_RegRdi: return std::make_pair(&usr_regs_.rdi, 8);
-    case X64_RegRbp: return std::make_pair(&usr_regs_.rbp, 8);
-    case X64_RegRsp: return std::make_pair(&usr_regs_.rsp, 8);
-    case X64_RegR8:  return std::make_pair(&usr_regs_.r8 , 8);
-    case X64_RegR9:  return std::make_pair(&usr_regs_.r9 , 8);
-    case X64_RegR10: return std::make_pair(&usr_regs_.r10, 8);
-    case X64_RegR11: return std::make_pair(&usr_regs_.r11, 8);
-    case X64_RegR12: return std::make_pair(&usr_regs_.r12, 8);
-    case X64_RegR13: return std::make_pair(&usr_regs_.r13, 8);
-    case X64_RegR14: return std::make_pair(&usr_regs_.r14, 8);
-    case X64_RegR15: return std::make_pair(&usr_regs_.r15, 8);
-    case X64_RegRip: return std::make_pair(&usr_regs_.rip, 8);
-    case X64_RegRflags: return std::make_pair(&usr_regs_.eflags, 8);
-    case X64_SegCs:  return std::make_pair(&usr_regs_.cs, 8);
-    case X64_SegSs:  return std::make_pair(&usr_regs_.ss, 8);
-    case X64_SegDs:  return std::make_pair(&usr_regs_.ds, 8);
-    case X64_SegEs:  return std::make_pair(&usr_regs_.es, 8);
-    case X64_SegFs:  return std::make_pair(&usr_regs_.fs, 8);
-    case X64_SegGs:  return std::make_pair(&usr_regs_.gs, 8);
+    case X64_RegRax: return usr_regs_.rax;
+    case X64_RegRbx: return usr_regs_.rbx;
+    case X64_RegRcx: return usr_regs_.rcx;
+    case X64_RegRdx: return usr_regs_.rdx;
+    case X64_RegRsi: return usr_regs_.rsi;
+    case X64_RegRdi: return usr_regs_.rdi;
+    case X64_RegRbp: return usr_regs_.rbp;
+    case X64_RegRsp: return usr_regs_.rsp;
+    case X64_RegR8:  return usr_regs_.r8;
+    case X64_RegR9:  return usr_regs_.r9;
+    case X64_RegR10: return usr_regs_.r10;
+    case X64_RegR11: return usr_regs_.r11;
+    case X64_RegR12: return usr_regs_.r12;
+    case X64_RegR13: return usr_regs_.r13;
+    case X64_RegR14: return usr_regs_.r14;
+    case X64_RegR15: return usr_regs_.r15;
+    case X64_RegRip: return usr_regs_.rip;
+    case X64_RegRflags: return usr_regs_.eflags;
+    case X64_SegCs:  return usr_regs_.cs;
+    case X64_SegSs:  return usr_regs_.ss;
+    case X64_SegDs:  return usr_regs_.ds;
+    case X64_SegEs:  return usr_regs_.es;
+    case X64_SegFs:  return usr_regs_.fs;
+    case X64_SegGs:  return usr_regs_.gs;
     
-    case X64_RegSt0: return std::make_pair(&usr_fpregs_.st_space[0], 16);
-    case X64_RegSt1: return std::make_pair(&usr_fpregs_.st_space[4], 16);
-    case X64_RegSt2: return std::make_pair(&usr_fpregs_.st_space[8], 16);
-    case X64_RegSt3: return std::make_pair(&usr_fpregs_.st_space[12], 16);
-    case X64_RegSt4: return std::make_pair(&usr_fpregs_.st_space[16], 16);
-    case X64_RegSt5: return std::make_pair(&usr_fpregs_.st_space[20], 16);
-    case X64_RegSt6: return std::make_pair(&usr_fpregs_.st_space[24], 16);
-    case X64_RegSt7: return std::make_pair(&usr_fpregs_.st_space[28], 16);
+#if false
+    case X64_RegSt0: return usr_fpregs_.st_space[0];
+    case X64_RegSt1: return usr_fpregs_.st_space[4];
+    case X64_RegSt2: return usr_fpregs_.st_space[8];
+    case X64_RegSt3: return usr_fpregs_.st_space[12];
+    case X64_RegSt4: return usr_fpregs_.st_space[16];
+    case X64_RegSt5: return usr_fpregs_.st_space[20];
+    case X64_RegSt6: return usr_fpregs_.st_space[24];
+    case X64_RegSt7: return usr_fpregs_.st_space[28];
+#endif
     
-    case X64_RegDr0: return std::make_pair(&u_debugreg_[0], 8);
-    case X64_RegDr1: return std::make_pair(&u_debugreg_[1], 8);
-    case X64_RegDr2: return std::make_pair(&u_debugreg_[2], 8);
-    case X64_RegDr3: return std::make_pair(&u_debugreg_[3], 8);
-    case X64_RegDr4: return std::make_pair(&u_debugreg_[4], 8);
-    case X64_RegDr5: return std::make_pair(&u_debugreg_[5], 8);
-    case X64_RegDr6: return std::make_pair(&u_debugreg_[6], 8);
-    case X64_RegDr7: return std::make_pair(&u_debugreg_[7], 8);
-  } throw std::out_of_range("invalid reg index");
+    case X64_RegDr0: return u_debugreg_[0];
+    case X64_RegDr1: return u_debugreg_[1];
+    case X64_RegDr2: return u_debugreg_[2];
+    case X64_RegDr3: return u_debugreg_[3];
+    case X64_RegDr4: return u_debugreg_[4];
+    case X64_RegDr5: return u_debugreg_[5];
+    case X64_RegDr6: return u_debugreg_[6];
+    case X64_RegDr7: return u_debugreg_[7];
+    
+    default: throw std::out_of_range("invalid reg index");
+  }
+}
+
+void X64_RawContext::set_reg(unsigned int reg_idx, const RegValue & value)
+{
+  switch(reg_idx) {
+    case X64_RegRax: usr_regs_.rax = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRbx: usr_regs_.rbx = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRcx: usr_regs_.rcx = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRdx: usr_regs_.rdx = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRsi: usr_regs_.rsi = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRdi: usr_regs_.rdi = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRbp: usr_regs_.rbp = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRsp: usr_regs_.rsp = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR8:  usr_regs_.r8  = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR9:  usr_regs_.r9  = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR10: usr_regs_.r10 = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR11: usr_regs_.r11 = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR12: usr_regs_.r12 = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR13: usr_regs_.r13 = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR14: usr_regs_.r14 = value.convert_to<std::uint64_t>(); break;
+    case X64_RegR15: usr_regs_.r15 = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRip: usr_regs_.rip = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRflags: usr_regs_.eflags = value.convert_to<std::uint64_t>(); break;
+    case X64_SegCs:  usr_regs_.cs = value.convert_to<std::uint64_t>(); break;
+    case X64_SegSs:  usr_regs_.ss = value.convert_to<std::uint64_t>(); break;
+    case X64_SegDs:  usr_regs_.ds = value.convert_to<std::uint64_t>(); break;
+    case X64_SegEs:  usr_regs_.es = value.convert_to<std::uint64_t>(); break;
+    case X64_SegFs:  usr_regs_.fs = value.convert_to<std::uint64_t>(); break;
+    case X64_SegGs:  usr_regs_.gs = value.convert_to<std::uint64_t>(); break;
+    
+#if false
+    case X64_RegSt0: usr_fpregs_.st_space[0];
+    case X64_RegSt1: usr_fpregs_.st_space[4];
+    case X64_RegSt2: usr_fpregs_.st_space[8];
+    case X64_RegSt3: usr_fpregs_.st_space[12];
+    case X64_RegSt4: usr_fpregs_.st_space[16];
+    case X64_RegSt5: usr_fpregs_.st_space[20];
+    case X64_RegSt6: usr_fpregs_.st_space[24];
+    case X64_RegSt7: usr_fpregs_.st_space[28];
+#endif
+    
+    case X64_RegDr0: u_debugreg_[0] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr1: u_debugreg_[1] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr2: u_debugreg_[2] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr3: u_debugreg_[3] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr4: u_debugreg_[4] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr5: u_debugreg_[5] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr6: u_debugreg_[6] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr7: u_debugreg_[7] = value.convert_to<std::uint64_t>(); break;
+    
+    default: throw std::out_of_range("invalid reg index");
+  }
 }
 
 } // namespace hdbg

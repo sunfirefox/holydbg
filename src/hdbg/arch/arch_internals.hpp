@@ -1,7 +1,7 @@
 #ifndef __HDBG_SRC_ARCH_ARCH_INTERNALS_HPP__
 #define __HDBG_SRC_ARCH_ARCH_INTERNALS_HPP__
 
-#include <hdbg/arch/raw_context.hpp>
+#include "raw_context.hpp"
 
 #include <cstdint>
 #include <memory>

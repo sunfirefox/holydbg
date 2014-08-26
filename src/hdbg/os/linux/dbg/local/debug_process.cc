@@ -1,5 +1,6 @@
 #include <hdbg/dbg/local/debug_process.hpp>
 
+#include <hdbg/binfmt/from_image.hpp>
 #include <hdbg/enum/enum_mempages.hpp>
 
 #define _POSIX_C_SOURCE 200809L
@@ -59,6 +60,7 @@ struct LocalDebugProcess::Impl
   const process_id pid_;
   const std::uintptr_t base_addr_;
   const int fdmem_;
+  std::unique_ptr<BinaryFormat> image_;
 };
 
 LocalDebugProcess::Impl::Impl(process_id proc_id, int flags)
@@ -94,6 +96,13 @@ process_id LocalDebugProcess::id() const
 std::uintptr_t LocalDebugProcess::image_base() const
 {
   return pimpl_->base_addr_;
+}
+
+const BinaryFormat & LocalDebugProcess::image() const
+{
+  if(!pimpl_->image_)
+    pimpl_->image_ = binfmt_from_image(*this, pimpl_->base_addr_);
+  return *pimpl_->image_;
 }
 
 void LocalDebugProcess::kill(bool force)

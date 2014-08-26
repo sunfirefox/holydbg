@@ -43,24 +43,14 @@ ThreadContextTest::~ThreadContextTest()
 }
 
 TEST_F(ThreadContextTest, BasicRegValue) {
-  ASSERT_EQ(0xdeadbeef, thr_ctx_.reg_value<std::uint32_t>(0));
-}
-
-TEST_F(ThreadContextTest, NarrowRegValue) {
-  EXPECT_EQ(0xdeadbeef, thr_ctx_.reg_value<std::uint32_t>(0));
-  EXPECT_EQ(0x0000beef, thr_ctx_.reg_value<std::uint16_t>(0));
-  EXPECT_EQ(0x000000ef, thr_ctx_.reg_value<std::uint8_t >(0));
-}
-
-TEST_F(ThreadContextTest, ExtendRegValue) {
-  EXPECT_EQ(0x00000000deadbeef, thr_ctx_.reg_value<std::uint64_t>(0));
+  ASSERT_EQ(0xdeadbeef, thr_ctx_.reg_value(0));
 }
 
 TEST_F(ThreadContextTest, CopyOnWrite) {
   hdbg::ThreadContext ctx_copy ( thr_ctx_ );
-  EXPECT_EQ(0xdeadbeef, ctx_copy.reg_value<std::uint32_t>(0));
-  ctx_copy.set_reg<std::uint32_t>(0, 0xcafebabe);
-  EXPECT_EQ(0xcafebabe, ctx_copy.reg_value<std::uint32_t>(0));
-  EXPECT_EQ(0xdeadbeef, thr_ctx_.reg_value<std::uint32_t>(0));
+  EXPECT_EQ(0xdeadbeef, ctx_copy.reg_value(0));
+  ctx_copy.set_reg(0, 0xcafebabe);
+  EXPECT_EQ(0xcafebabe, ctx_copy.reg_value(0));
+  EXPECT_EQ(0xdeadbeef, thr_ctx_.reg_value(0));
 }
 

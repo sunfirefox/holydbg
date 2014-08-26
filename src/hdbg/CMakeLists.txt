@@ -17,10 +17,10 @@ if(HOLYDBG_CXX_GNU OR HOLYDBG_CXX_CLANG)
   add_definitions("-fvisibility=hidden")
 endif(HOLYDBG_CXX_GNU OR HOLYDBG_CXX_CLANG)
 
-find_package(Boost COMPONENTS filesystem system REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system)
 if(Boost_FOUND)
   unit_add_include_dirs(lib_hdbg ${Boost_INCLUDE_DIRS})
-  unit_add_link_deps(lib_hdbg ${Boost_LIBRARIES})
+  unit_add_link_deps(lib_hdbg ${Boost_LIBRARIES} gmp)
 endif()
 
 add_subdirectory(arch)

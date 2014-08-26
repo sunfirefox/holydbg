@@ -81,7 +81,7 @@ void HwBreakpoint::set_on_thread(DebugThread & dbg_thr)
   dbg_thr.get_context(thr_ctx_);
   for(auto reg_idx : hw_bpx_regidx) {
     if(!arch_internals.is_hw_bpx_reg_enabled(reg_idx, thr_ctx_)) {
-      const auto ov_dreg_val = thr_ctx_.reg_value<std::uintptr_t>(reg_idx);
+      const auto ov_dreg_val = thr_ctx_.reg_value(reg_idx);
       thr_ctx_.set_reg(reg_idx, addr_);
       arch_internals.set_hw_bpx_enabled(reg_idx, true, thr_ctx_);
       dbg_thr.set_context(thr_ctx_);
@@ -89,7 +89,7 @@ void HwBreakpoint::set_on_thread(DebugThread & dbg_thr)
       return;
     }
   }
-  throw std::runtime_error("no debug register available for hw_bpx");
+  throw std::runtime_error("no debug registers available for hw_bpx");
 }
 
 void HwBreakpoint::remove_from_thread(DebugThread & dbg_thr)

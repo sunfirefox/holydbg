@@ -1,7 +1,7 @@
 #ifndef __HDBG_SRC_ARCH_INTEL_X86_64_RAW_CONTEXT_HPP__
 #define __HDBG_SRC_ARCH_INTEL_X86_64_RAW_CONTEXT_HPP__
 
-#include <hdbg/arch/raw_context.hpp>
+#include "../../raw_context.hpp"
 
 namespace hdbg {
 
@@ -92,11 +92,12 @@ public:
   virtual std::unique_ptr<RawContext> clone() const override;
   virtual std::shared_ptr<RawContext> shared_clone() const override;
   
-  virtual bool valid_for(const char * arch) const override;
+  virtual bool valid_for(const LocalDebugThread &) const override;
   virtual void obtain_from(const LocalDebugThread &) override;
   virtual void apply_to(LocalDebugThread &) const override;
   
-  virtual std::pair<const void *, std::size_t> reg_addr(unsigned int reg_idx) const override;
+  virtual RegValue reg_value(unsigned int reg_idx) const override;
+  virtual void set_reg(unsigned int reg_idx, const RegValue & value) override;
   
 private:
   detail::x64_user_regs_struct usr_regs_;

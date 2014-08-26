@@ -99,34 +99,34 @@ const RegInfo & X64_ArchServices::reg_info(unsigned int reg_idx) const
   return *reg_info_table[ reg_idx ];
 }
 
-std::uintptr_t X64_ArchServices::get_inst_ptr(const ThreadContext & thr_ctx) const
+RegValue X64_ArchServices::get_inst_ptr(const ThreadContext & thr_ctx) const
 {
-  return thr_ctx.reg_value<std::uint64_t>(X64_RegRip);
+  return thr_ctx.reg_value(X64_RegRip);
 }
 
-void X64_ArchServices::set_inst_ptr(ThreadContext & thr_ctx, std::uintptr_t value) const
+void X64_ArchServices::set_inst_ptr(ThreadContext & thr_ctx, const RegValue & rv) const
 {
-  thr_ctx.set_reg<std::uint64_t>(X64_RegRip, value);
+  thr_ctx.set_reg(X64_RegRip, rv);
 }
 
-std::uintptr_t X64_ArchServices::get_stack_ptr(const ThreadContext & thr_ctx) const
+RegValue X64_ArchServices::get_stack_ptr(const ThreadContext & thr_ctx) const
 {
-  return thr_ctx.reg_value<std::uint64_t>(X64_RegRsp);
+  return thr_ctx.reg_value(X64_RegRsp);
 }
 
-void X64_ArchServices::set_stack_ptr(ThreadContext & thr_ctx, std::uintptr_t value) const
+void X64_ArchServices::set_stack_ptr(ThreadContext & thr_ctx, const RegValue & rv) const
 {
-  thr_ctx.set_reg<std::uint64_t>(X64_RegRsp, value);
+  thr_ctx.set_reg(X64_RegRsp, rv);
 }
 
-std::uintptr_t X64_ArchServices::get_stack_base(const ThreadContext & thr_ctx) const
+RegValue X64_ArchServices::get_stack_base(const ThreadContext & thr_ctx) const
 {
-  return thr_ctx.reg_value<std::uint64_t>(X64_RegRbp);
+  return thr_ctx.reg_value(X64_RegRbp);
 }
 
-void X64_ArchServices::set_stack_base(ThreadContext & thr_ctx, std::uintptr_t value) const
+void X64_ArchServices::set_stack_base(ThreadContext & thr_ctx, const RegValue & rv) const
 {
-  thr_ctx.set_reg<std::uint64_t>(X64_RegRbp, value);
+  thr_ctx.set_reg(X64_RegRbp, rv);
 }
 
 unsigned int X64_ArchServices::get_flag(const ThreadContext & thr_ctx, unsigned int flg_idx) const
@@ -137,7 +137,7 @@ unsigned int X64_ArchServices::get_flag(const ThreadContext & thr_ctx, unsigned 
   const auto& flg_e = x64_flg_table[ flg_idx ];
   const auto flg_shift = flg_e.first;
   const auto flg_mask = flg_e.second;
-  const auto rflags = thr_ctx.reg_value<std::uint64_t>(X64_RegRflags);
+  const auto rflags = thr_ctx.reg_value(X64_RegRflags).convert_to<std::uint64_t>();
   return (rflags >> flg_shift) & flg_mask;
 }
 
@@ -150,10 +150,10 @@ void X64_ArchServices::set_flag(ThreadContext & thr_ctx, unsigned int flg_idx,
   const auto& flg_e = x64_flg_table[ flg_idx ];
   const auto flg_shift = flg_e.first;
   const auto flg_mask = flg_e.second;
-  auto rflags = thr_ctx.reg_value<std::uint64_t>(X64_RegRflags);
+  auto rflags = thr_ctx.reg_value(X64_RegRflags);
   rflags &= ~(flg_mask << flg_shift);
   rflags |= (value & flg_mask) << flg_shift;
-  thr_ctx.set_reg<std::uint64_t>(X64_RegRflags, rflags);
+  thr_ctx.set_reg(X64_RegRflags, rflags);
 }
 
 ArchInternals & X64_ArchServices::get_internals() const

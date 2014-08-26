@@ -2,8 +2,8 @@
 #define __HDBG_DBG_BPS_HW_BREAKPOINT_HPP__
 
 #include <hdbg/sys_types.hpp>
-#include <hdbg/dbg/debug_event.hpp>
 #include <hdbg/dbg/breakpoint.hpp>
+#include <hdbg/dbg/debug_event.hpp>
 #include <hdbg/dbg/thread_context.hpp>
 
 #include <cstdint>
@@ -47,7 +47,7 @@ private:
   struct HwBpxData
   {
     unsigned int dreg_idx;
-    std::uintptr_t ov_dreg_val;
+    RegValue ov_dreg_val;
   };
   
   std::uintptr_t addr_;
