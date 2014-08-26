@@ -20,14 +20,19 @@ X64_RawContext::X64_RawContext(const X64_RawContext &) = default;
 X64_RawContext::X64_RawContext(X64_RawContext && raw_ctx) = default;
 X64_RawContext::~X64_RawContext() = default;
 
-bool X64_RawContext::valid_for(const char * arch) const
+std::unique_ptr<RawContext> X64_RawContext::clone() const
 {
-  return !std::strcmp(arch, "x86_64");
+  return std::unique_ptr<RawContext>( new X64_RawContext(*this) );
 }
 
 std::shared_ptr<RawContext> X64_RawContext::shared_clone() const
 {
   return std::make_shared<X64_RawContext>(*this);
+}
+
+bool X64_RawContext::valid_for(const char * arch) const
+{
+  return !std::strcmp(arch, "x86_64");
 }
 
 void X64_RawContext::obtain_from(const LocalDebugThread & dbg_thr)

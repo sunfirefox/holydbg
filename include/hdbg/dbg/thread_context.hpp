@@ -72,6 +72,8 @@ void ThreadContext::set_reg(unsigned int reg_idx, const T & value)
   static_assert( is_valid_reg_value<T>(), "invalid reg value type" );
   
   if(raw_ctx_) {
+    if(raw_ctx_.use_count() > 1)
+      raw_ctx_ = raw_ctx_->shared_clone();
     const auto raddr_p = raw_ctx_->reg_addr(reg_idx);
     std::vector<std::uint8_t> buf( std::max(raddr_p.second, sizeof(T)), 0 );
 #ifdef HOLYDBG_BE_ENDIAN

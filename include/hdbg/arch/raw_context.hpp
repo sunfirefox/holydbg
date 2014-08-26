@@ -16,8 +16,10 @@ class HDBG_EXPORT RawContext
 public:
   virtual ~RawContext() = default;
   
-  virtual bool valid_for(const char * arch) const = 0;
+  virtual std::unique_ptr<RawContext> clone() const = 0;
   virtual std::shared_ptr<RawContext> shared_clone() const = 0;
+  
+  virtual bool valid_for(const char * arch) const = 0;
   virtual void obtain_from(const LocalDebugThread &) = 0;
   virtual void apply_to(LocalDebugThread &) const = 0;
   
