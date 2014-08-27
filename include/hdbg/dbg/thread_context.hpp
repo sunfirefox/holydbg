@@ -18,7 +18,7 @@ namespace hdbg {
 class RawContext;
 class LocalDebugThread;
 
-class HDBG_EXPORT ThreadContext
+class HDBG_API ThreadContext
 {
 public:
   ThreadContext();

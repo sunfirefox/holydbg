@@ -11,7 +11,7 @@ namespace hdbg {
 
 class ThreadContext;
 
-class HDBG_EXPORT LocalDebugThread final : public DebugThread
+class HDBG_API LocalDebugThread final : public DebugThread
 {
 public:
   LocalDebugThread(LocalDebugProcess & process, thread_id tid, int flags);

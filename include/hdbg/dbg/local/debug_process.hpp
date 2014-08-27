@@ -10,7 +10,7 @@
 
 namespace hdbg {
 
-class HDBG_EXPORT LocalDebugProcess final : public DebugProcess
+class HDBG_API LocalDebugProcess final : public DebugProcess
 {
 public:
   LocalDebugProcess(process_id pid, int flags);

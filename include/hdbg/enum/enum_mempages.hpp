@@ -45,7 +45,7 @@ inline bool operator!=(const MemPageEntry & lhs, const MemPageEntry & rhs)
 
 class MemPageRange;
 
-class HDBG_EXPORT MemPageIterator
+class HDBG_API MemPageIterator
   : public boost::iterator_facade< MemPageIterator,
                                    const MemPageEntry,
                                    std::input_iterator_tag >
@@ -65,7 +65,7 @@ private:
   MemPageEntry mpage_entry_;
 };
 
-class HDBG_EXPORT MemPageRange
+class HDBG_API MemPageRange
 {
   friend class MemPageIterator;
   

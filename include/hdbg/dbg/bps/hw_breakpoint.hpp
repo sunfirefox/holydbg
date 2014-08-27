@@ -14,7 +14,7 @@ namespace hdbg {
 
 class DebugThread;
 
-class HDBG_EXPORT HwBreakpoint final
+class HDBG_API HwBreakpoint final
   : public Breakpoint
 {
   class HwBpxDbgEvtListener final

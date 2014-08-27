@@ -12,7 +12,7 @@ namespace hdbg {
 
 class BinaryFormat;
 
-class HDBG_EXPORT DebugProcess
+class HDBG_API DebugProcess
 {
 public:
   

@@ -9,9 +9,11 @@
 
 #include <sys/ptrace.h>
 
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 #include <system_error>
 
@@ -19,23 +21,23 @@ namespace hdbg {
 
 namespace {
 
-RegValue read_reg_st(const void * st_ptr)
+RegValue read_st_reg(const unsigned int * st_ptr)
 {
-  const auto st_bytes = reinterpret_cast<const std::uint8_t *>(st_ptr);
-  
   RegValue rv;
   const std::size_t sizeof_reg_st = 32;
   const unsigned int reg_st_uint_entries = sizeof_reg_st / sizeof(unsigned int);
   for(int i = 0; i < reg_st_uint_entries; ++i) {
-    const auto st_num = native_load<unsigned int>(st_bytes + i * sizeof(unsigned int));
-    rv += st_num;
-    rv <<= sizeof(unsigned int) * 8;
+    rv += st_ptr[i];
+    rv <<= std::numeric_limits<unsigned int>::digits;
   }
   return rv;
 }
 
 #if false
-  void write_reg_st(void * st_ptr, const RegValue & rv);
+void write_st_reg(unsigned int * st_ptr, const RegValue & rv)
+{
+
+}
 #endif
 
 } // namespace
@@ -59,7 +61,8 @@ bool X64_RawContext::valid_for(const LocalDebugThread & dbg_thr) const
 {
   const auto& dbg_proc = dbg_thr.process();
   const auto& proc_img = dbg_proc.image();
-  return !std::strcmp("x86_64", proc_img.arch());
+  const auto proc_arch = proc_img.arch();
+  return !std::strcmp("x86_64", proc_arch);
 }
 
 void X64_RawContext::obtain_from(const LocalDebugThread & dbg_thr)
@@ -131,14 +134,14 @@ RegValue X64_RawContext::reg_value(unsigned int reg_idx) const
     case X64_SegFs:  return usr_regs_.fs;
     case X64_SegGs:  return usr_regs_.gs;
     
-    case X64_RegSt0: return read_reg_st(&usr_fpregs_.st_space[0 * 4]);
-    case X64_RegSt1: return read_reg_st(&usr_fpregs_.st_space[1 * 4]);
-    case X64_RegSt2: return read_reg_st(&usr_fpregs_.st_space[2 * 4]);
-    case X64_RegSt3: return read_reg_st(&usr_fpregs_.st_space[3 * 4]);
-    case X64_RegSt4: return read_reg_st(&usr_fpregs_.st_space[4 * 4]);
-    case X64_RegSt5: return read_reg_st(&usr_fpregs_.st_space[5 * 4]);
-    case X64_RegSt6: return read_reg_st(&usr_fpregs_.st_space[6 * 4]);
-    case X64_RegSt7: return read_reg_st(&usr_fpregs_.st_space[7 * 4]);
+    case X64_RegSt0: return read_st_reg(&usr_fpregs_.st_space[0 * 4]);
+    case X64_RegSt1: return read_st_reg(&usr_fpregs_.st_space[1 * 4]);
+    case X64_RegSt2: return read_st_reg(&usr_fpregs_.st_space[2 * 4]);
+    case X64_RegSt3: return read_st_reg(&usr_fpregs_.st_space[3 * 4]);
+    case X64_RegSt4: return read_st_reg(&usr_fpregs_.st_space[4 * 4]);
+    case X64_RegSt5: return read_st_reg(&usr_fpregs_.st_space[5 * 4]);
+    case X64_RegSt6: return read_st_reg(&usr_fpregs_.st_space[6 * 4]);
+    case X64_RegSt7: return read_st_reg(&usr_fpregs_.st_space[7 * 4]);
     
     case X64_RegDr0: return u_debugreg_[0];
     case X64_RegDr1: return u_debugreg_[1];
@@ -156,50 +159,50 @@ RegValue X64_RawContext::reg_value(unsigned int reg_idx) const
 void X64_RawContext::set_reg(unsigned int reg_idx, const RegValue & value)
 {
   switch(reg_idx) {
-    case X64_RegRax: usr_regs_.rax = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRbx: usr_regs_.rbx = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRcx: usr_regs_.rcx = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRdx: usr_regs_.rdx = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRsi: usr_regs_.rsi = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRdi: usr_regs_.rdi = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRbp: usr_regs_.rbp = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRsp: usr_regs_.rsp = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR8:  usr_regs_.r8  = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR9:  usr_regs_.r9  = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR10: usr_regs_.r10 = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR11: usr_regs_.r11 = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR12: usr_regs_.r12 = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR13: usr_regs_.r13 = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR14: usr_regs_.r14 = value.convert_to<std::uint64_t>(); break;
-    case X64_RegR15: usr_regs_.r15 = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRip: usr_regs_.rip = value.convert_to<std::uint64_t>(); break;
-    case X64_RegRflags: usr_regs_.eflags = value.convert_to<std::uint64_t>(); break;
-    case X64_SegCs:  usr_regs_.cs = value.convert_to<std::uint64_t>(); break;
-    case X64_SegSs:  usr_regs_.ss = value.convert_to<std::uint64_t>(); break;
-    case X64_SegDs:  usr_regs_.ds = value.convert_to<std::uint64_t>(); break;
-    case X64_SegEs:  usr_regs_.es = value.convert_to<std::uint64_t>(); break;
-    case X64_SegFs:  usr_regs_.fs = value.convert_to<std::uint64_t>(); break;
-    case X64_SegGs:  usr_regs_.gs = value.convert_to<std::uint64_t>(); break;
+    case X64_RegRax: usr_regs_.rax = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRbx: usr_regs_.rbx = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRcx: usr_regs_.rcx = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRdx: usr_regs_.rdx = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRsi: usr_regs_.rsi = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRdi: usr_regs_.rdi = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRbp: usr_regs_.rbp = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRsp: usr_regs_.rsp = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR8:  usr_regs_.r8  = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR9:  usr_regs_.r9  = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR10: usr_regs_.r10 = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR11: usr_regs_.r11 = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR12: usr_regs_.r12 = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR13: usr_regs_.r13 = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR14: usr_regs_.r14 = static_cast<std::uint64_t>( value ); break;
+    case X64_RegR15: usr_regs_.r15 = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRip: usr_regs_.rip = static_cast<std::uint64_t>( value ); break;
+    case X64_RegRflags: usr_regs_.eflags = static_cast<std::uint64_t>( value ); break;
+    case X64_SegCs:  usr_regs_.cs = static_cast<std::uint64_t>( value ); break;
+    case X64_SegSs:  usr_regs_.ss = static_cast<std::uint64_t>( value ); break;
+    case X64_SegDs:  usr_regs_.ds = static_cast<std::uint64_t>( value ); break;
+    case X64_SegEs:  usr_regs_.es = static_cast<std::uint64_t>( value ); break;
+    case X64_SegFs:  usr_regs_.fs = static_cast<std::uint64_t>( value ); break;
+    case X64_SegGs:  usr_regs_.gs = static_cast<std::uint64_t>( value ); break;
     
 #if false
-    case X64_RegSt0: write_reg_st(&usr_fpregs_.st_space[0 * 4], value); break;
-    case X64_RegSt1: write_reg_st(&usr_fpregs_.st_space[1 * 4], value); break;
-    case X64_RegSt2: write_reg_st(&usr_fpregs_.st_space[2 * 4], value); break;
-    case X64_RegSt3: write_reg_st(&usr_fpregs_.st_space[3 * 4], value); break;
-    case X64_RegSt4: write_reg_st(&usr_fpregs_.st_space[4 * 4], value); break;
-    case X64_RegSt5: write_reg_st(&usr_fpregs_.st_space[5 * 4], value); break;
-    case X64_RegSt6: write_reg_st(&usr_fpregs_.st_space[6 * 4], value); break;
-    case X64_RegSt7: write_reg_st(&usr_fpregs_.st_space[7 * 4], value); break;
+    case X64_RegSt0: write_st_reg(&usr_fpregs_.st_space[0 * 4], value); break;
+    case X64_RegSt1: write_st_reg(&usr_fpregs_.st_space[1 * 4], value); break;
+    case X64_RegSt2: write_st_reg(&usr_fpregs_.st_space[2 * 4], value); break;
+    case X64_RegSt3: write_st_reg(&usr_fpregs_.st_space[3 * 4], value); break;
+    case X64_RegSt4: write_st_reg(&usr_fpregs_.st_space[4 * 4], value); break;
+    case X64_RegSt5: write_st_reg(&usr_fpregs_.st_space[5 * 4], value); break;
+    case X64_RegSt6: write_st_reg(&usr_fpregs_.st_space[6 * 4], value); break;
+    case X64_RegSt7: write_st_reg(&usr_fpregs_.st_space[7 * 4], value); break;
 #endif
     
-    case X64_RegDr0: u_debugreg_[0] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr1: u_debugreg_[1] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr2: u_debugreg_[2] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr3: u_debugreg_[3] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr4: u_debugreg_[4] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr5: u_debugreg_[5] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr6: u_debugreg_[6] = value.convert_to<std::uint64_t>(); break;
-    case X64_RegDr7: u_debugreg_[7] = value.convert_to<std::uint64_t>(); break;
+    case X64_RegDr0: u_debugreg_[0] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr1: u_debugreg_[1] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr2: u_debugreg_[2] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr3: u_debugreg_[3] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr4: u_debugreg_[4] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr5: u_debugreg_[5] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr6: u_debugreg_[6] = static_cast<std::uint64_t>( value ); break;
+    case X64_RegDr7: u_debugreg_[7] = static_cast<std::uint64_t>( value ); break;
     
     default: throw std::out_of_range("invalid reg index");
   }

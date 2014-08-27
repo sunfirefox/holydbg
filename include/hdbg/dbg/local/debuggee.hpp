@@ -12,7 +12,7 @@
 
 namespace hdbg {
 
-class HDBG_EXPORT LocalDebuggee final
+class HDBG_API LocalDebuggee final
   : public Debuggee
 {
 public:
@@ -51,15 +51,12 @@ private:
   LocalDebuggee(process_id pid);
   LocalDebuggee(const LocalDebuggee & parent, process_id pid);
   
-  DebugEventEmitter evt_emitter_;
   BreakpointManager bp_mgr_;
+  DebugEventEmitter evt_emitter_;
   
   class Impl;
   std::unique_ptr<Impl> pimpl_;
 };
-
-// HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_exec(const DbgExecParams & params, unsigned int flags = 0);
-// HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_attach(process_id pid, unsigned int flags = 0);
 
 } // namespace hdbg
 

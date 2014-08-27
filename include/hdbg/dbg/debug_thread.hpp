@@ -11,7 +11,7 @@ namespace hdbg {
 class DebugProcess;
 class ThreadContext;
 
-class HDBG_EXPORT DebugThread
+class HDBG_API DebugThread
 {
 public:
   

@@ -30,7 +30,7 @@ inline bool operator!=(const ProcessEntry & lhs, const ProcessEntry & rhs)
 
 class ProcessRange;
 
-class HDBG_EXPORT ProcessIterator
+class HDBG_API ProcessIterator
   : public boost::iterator_facade< ProcessIterator,
                                    const ProcessEntry,
                                    std::input_iterator_tag >
@@ -50,7 +50,7 @@ private:
   ProcessEntry proc_entry_;
 };
 
-class HDBG_EXPORT ProcessRange
+class HDBG_API ProcessRange
 {
   friend class ProcessIterator;
   

@@ -29,23 +29,23 @@
 #cmakedefine hdbg_EXPORTS
 
 #if defined( HOLYDBG_CXX_MSVC )
-#  define HOLYDBG_DLLEXPORT __declspec(dllexport)
-#  define HOLYDBG_DLLIMPORT __declspec(dllimport)
+#  define HOLYDBG_EXPORT __declspec(dllexport)
+#  define HOLYDBG_IMPORT __declspec(dllimport)
 #elif defined( HOLYDBG_CXX_GNU ) || defined( HOLYDBG_CXX_CLANG )
-#  define HOLYDBG_DLLEXPORT __attribute__((visibility("default")))
-#  define HOLYDBG_DLLIMPORT __attribute__((visibility("default")))
+#  define HOLYDBG_EXPORT __attribute__((visibility("default")))
+#  define HOLYDBG_IMPORT __attribute__((visibility("default")))
 #else // HOLYDBG_CXX_UNKNOWN
-#  define HOLYDBG_DLLEXPORT
-#  define HOLYDBG_DLLIMPORT
+#  define HOLYDBG_EXPORT
+#  define HOLYDBG_IMPORT
 #endif
 
 #ifdef LIBHDBG_STATIC
-#  define HDBG_EXPORT
+#  define HDBG_API
 #else // LIBHDBG_STATIC
 #  if defined( hdbg_EXPORTS )
-#    define HDBG_EXPORT HOLYDBG_DLLEXPORT
+#    define HDBG_API HOLYDBG_EXPORT
 #  else
-#    define HDBG_EXPORT HOLYDBG_DLLIMPORT
+#    define HDBG_API HOLYDBG_IMPORT
 #  endif
 #endif // LIBHDBG_STATIC
 

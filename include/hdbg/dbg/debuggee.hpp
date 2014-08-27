@@ -27,7 +27,7 @@ enum DebugFlags
 class Breakpoint;
 typedef unsigned int breakpoint_id;
 
-class HDBG_EXPORT Debuggee
+class HDBG_API Debuggee
 {
 public:
   typedef std::function<void(Debuggee &, DebugThread &, ThreadContext, breakpoint_id)> BpHandlerFn;

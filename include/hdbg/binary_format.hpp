@@ -7,7 +7,7 @@
 
 namespace hdbg {
 
-class HDBG_EXPORT BinaryFormat
+class HDBG_API BinaryFormat
 {
 public:
   virtual ~BinaryFormat() = default;

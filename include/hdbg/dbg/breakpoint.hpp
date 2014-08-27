@@ -10,7 +10,7 @@ class Debuggee;
 class DebugThread;
 class ThreadContext;
 
-class HDBG_EXPORT Breakpoint
+class HDBG_API Breakpoint
 {
 public:
   virtual ~Breakpoint() = default;

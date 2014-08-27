@@ -29,7 +29,7 @@ inline bool operator!=(const ThreadEntry & lhs, const ThreadEntry & rhs)
 
 class ThreadRange;
 
-class HDBG_EXPORT ThreadIterator
+class HDBG_API ThreadIterator
   : public boost::iterator_facade< ThreadIterator,
                                    const ThreadEntry,
                                    std::input_iterator_tag >
@@ -49,7 +49,7 @@ private:
   ThreadEntry thr_entry_;
 };
 
-class HDBG_EXPORT ThreadRange
+class HDBG_API ThreadRange
 {
   friend class ThreadIterator;
   

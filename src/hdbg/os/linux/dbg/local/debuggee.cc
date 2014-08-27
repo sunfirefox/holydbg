@@ -4,8 +4,6 @@
 #include <hdbg/dbg/local/debug_thread.hpp>
 #include <hdbg/enum/enum_threads.hpp>
 
-#include "../../process_kill_guard.hpp"
-
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
@@ -28,8 +26,9 @@ namespace {
 
 unsigned long translate_debug_flags(unsigned int dbg_flags)
 {
-  return PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK |
-         PTRACE_O_TRACEVFORK | PTRACE_O_TRACEEXIT |
+  return PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK      |
+         PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE |
+         PTRACE_O_TRACEEXIT  |
          ((dbg_flags & DebugFlags::KillOnExit) ? PTRACE_O_EXITKILL : 0);
 }
 
@@ -107,8 +106,8 @@ struct LocalDebuggee::Impl
   void wait_event(pid_t wpid, RawDebugEvent & evt);
   void dispatch_event(LocalDebuggee & self, const RawDebugEvent & evt);
   
-  std::unique_ptr<LocalDebuggee> do_attach_child(const LocalDebuggee & self, process_id pid,
-                                                 unsigned int flags);
+  std::unique_ptr<LocalDebuggee> do_attach_child(const LocalDebuggee & self,
+                                                 process_id pid, unsigned int flags);
   
   LocalDebugProcess process_;
   std::unordered_map<thread_id, DbgThreadData> threads_;
@@ -130,10 +129,7 @@ private:
   
   bool handle_bp_event(LocalDebuggee & self, LocalDebugThread & which, const DebugEvent & evt);
   
-  template <typename T>
-  void notify_event(LocalDebuggee & self, T && evt);
-  
-  unsigned long trace_opts_;
+  template <typename T> void notify_event(LocalDebuggee & self, T && evt);
 };
 
 LocalDebuggee::Impl::Impl(process_id pid)
@@ -204,24 +200,33 @@ void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
     if(wstopsig == SIGTRAP) {
       std::cerr << "[*] trapped" << std::endl;
       switch(status >> 8) {
+        case SIGTRAP | (PTRACE_EVENT_FORK << 8): {
+          std::cerr << "[*] event_fork" << std::endl;
+          const pid_t new_pid = ptrace_geteventmsg(wtid);
+          on_process_created(self, thr_e, new_pid);
+        } break;
+        
+        case SIGTRAP | (PTRACE_EVENT_VFORK << 8): {
+          std::cerr << "[*] event_vfork" << std::endl;
+          const pid_t new_pid = ptrace_geteventmsg(wtid);
+          on_process_created(self, thr_e, new_pid);
+        } break;
+        
         case SIGTRAP | (PTRACE_EVENT_CLONE << 8): {
           std::cerr << "[*] event_clone" << std::endl;
           const pid_t new_thr_id = ptrace_geteventmsg(wtid);
           on_thread_created(self, thr_e, new_thr_id);
         } break;
         
-        case SIGTRAP | (PTRACE_EVENT_EXIT  << 8): {
+        case SIGTRAP | (PTRACE_EVENT_VFORK_DONE << 8): {
+          std::cerr << "[*] event_vforkdone" << std::endl;
+        } break;
+        
+        case SIGTRAP | (PTRACE_EVENT_EXIT << 8): {
           const int exit_code = ptrace_geteventmsg(wtid);
           std::cerr << "[*] event_exit (tid = " << wtid 
                     << ", code = " << exit_code << ")" << std::endl;
           on_thread_exited(self, thr_e, exit_code);
-        } break;
-        
-        case SIGTRAP | (PTRACE_EVENT_FORK  << 8):
-        case SIGTRAP | (PTRACE_EVENT_VFORK << 8): {
-          std::cerr << "[*] event_xfork" << std::endl;
-          const pid_t new_pid = ptrace_geteventmsg(wtid);
-          on_process_created(self, thr_e, new_pid);
         } break;
         
         default: {

@@ -12,7 +12,7 @@ namespace hdbg {
 
 namespace {
 
-unsigned int reg_idx_to_dreg_offs(unsigned int reg_idx)
+int reg_idx_to_dreg_offs(unsigned int reg_idx)
 {
   const int dreg_offs = reg_idx - X64_RegDr0;
   if(dreg_offs < 0 || dreg_offs > 3)
@@ -38,7 +38,7 @@ const std::vector<std::uint8_t>& X64_ArchInternals::sw_bpx_template() const
 
 const std::vector<unsigned int> & X64_ArchInternals::hw_bpx_reg_indexes() const
 {
-  static const std::vector<unsigned int> hw_bpx_regidx {
+  static const std::vector<unsigned int> hw_bpx_regidx = {
     X64_RegDr0, X64_RegDr1, X64_RegDr2, X64_RegDr3
   };
   return hw_bpx_regidx;
@@ -47,20 +47,20 @@ const std::vector<unsigned int> & X64_ArchInternals::hw_bpx_reg_indexes() const
 bool X64_ArchInternals::is_hw_bpx_reg_enabled(unsigned int reg_idx, const ThreadContext & thr_ctx) const
 {
   const int dreg_offs = reg_idx_to_dreg_offs(reg_idx);
-  const std::uint32_t dr7_value = thr_ctx.reg_value(X64_RegDr7).convert_to<std::uint32_t>();
-  const DebugControlReg dreg_ctrl( dr7_value );
+  const auto dr7_value = static_cast<std::uint64_t>( thr_ctx.reg_value(X64_RegDr7) );
+  const X64_DebugControlReg dreg_ctrl( dr7_value );
   return dreg_ctrl.is_local_hw_bp_enabled(dreg_offs);
 }
 
 void X64_ArchInternals::set_hw_bpx_enabled(unsigned int reg_idx, bool enabled, ThreadContext & thr_ctx) const
 {
   const int dreg_offs = reg_idx_to_dreg_offs(reg_idx);
-  const auto dr7_value = thr_ctx.reg_value(X64_RegDr7).convert_to<std::uint32_t>();
-  DebugControlReg dreg_ctrl( dr7_value );
+  const auto dr7_value = static_cast<std::uint64_t>( thr_ctx.reg_value(X64_RegDr7) );
+  X64_DebugControlReg dreg_ctrl( dr7_value );
   dreg_ctrl.local_set_hw_bp_enabled(dreg_offs, enabled);
   if(enabled) {
-    dreg_ctrl.set_hw_bp_break_on(dreg_offs, DebugControlReg::break_on_exec);
-    dreg_ctrl.set_hw_bp_size(dreg_offs, DebugControlReg::bp_size_byte);
+    dreg_ctrl.set_hw_bp_break_on(dreg_offs, X64_DebugControlReg::BreakOnExec);
+    dreg_ctrl.set_hw_bp_size(dreg_offs, X64_DebugControlReg::BpSizeByte);
   }
   thr_ctx.set_reg(X64_RegDr7, dreg_ctrl.value());
 }

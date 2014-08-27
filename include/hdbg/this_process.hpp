@@ -6,7 +6,7 @@
 
 namespace hdbg { namespace this_process {
 
-HDBG_EXPORT process_id id();
+HDBG_API process_id id();
 
 } } // namespace hdbg::this_process
 

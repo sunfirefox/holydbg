@@ -8,7 +8,7 @@
 
 namespace hdbg {
 
-class HDBG_EXPORT SwBreakpoint final :
+class HDBG_API SwBreakpoint final :
   public Breakpoint
 {
 public:

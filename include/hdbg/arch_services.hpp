@@ -10,7 +10,7 @@ namespace hdbg {
 class ArchInternals;
 class ThreadContext;
 
-class HDBG_EXPORT ArchServices
+class HDBG_API ArchServices
 {
 public:
   virtual ~ArchServices() = default;
@@ -33,7 +33,7 @@ public:
   virtual ArchInternals & get_internals() const = 0;
 };
 
-HDBG_EXPORT ArchServices & get_arch_services(const char * arch);
+HDBG_API ArchServices & get_arch_services(const char * arch);
 
 } // namespace hdbg
 

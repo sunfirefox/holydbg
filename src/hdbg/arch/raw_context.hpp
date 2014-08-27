@@ -12,7 +12,7 @@ namespace hdbg {
 
 class LocalDebugThread;
 
-class HDBG_EXPORT RawContext
+class RawContext
 {
 public:
   virtual ~RawContext() = default;
