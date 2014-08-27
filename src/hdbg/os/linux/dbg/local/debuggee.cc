@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <sstream>
@@ -85,11 +86,11 @@ struct LocalDebuggee::Impl
   struct DbgThreadData
   {
     LocalDebugThread dbg_thr;
-    bool stopped;
     unsigned long sig_deliv;
+    bool stopped;
   };
   
-  typedef std::pair<const thread_id, DbgThreadData> DbgThreadEntry;
+  typedef typename std::unordered_map<thread_id, DbgThreadData>::value_type DbgThreadEntry;
   
   struct RawDebugEvent
   {
@@ -112,10 +113,10 @@ struct LocalDebuggee::Impl
   LocalDebugProcess process_;
   std::unordered_map<thread_id, DbgThreadData> threads_;
   
-  bool attached_;
-  bool evt_ign_;
   process_id new_child_;
   bool child_detach_;
+  bool evt_ign_;
+  bool attached_;
   
 private:
   void on_process_created(LocalDebuggee & self, DbgThreadEntry & thr_e, process_id new_pid);
@@ -139,7 +140,7 @@ LocalDebuggee::Impl::Impl(process_id pid)
 LocalDebugThread & LocalDebuggee::Impl::add_new_thread(thread_id tid)
 {
   hdbg::LocalDebugThread dbg_thr (process_, tid, DebugThread::OpenFlags::AllAccess);
-  DbgThreadData thr_data { std::move(dbg_thr), true, 0 };
+  DbgThreadData thr_data { std::move(dbg_thr), 0, true };
   const auto ins_p = threads_.emplace(tid, std::move(thr_data));
   return ins_p.first->second.dbg_thr;
 }
@@ -184,8 +185,7 @@ void LocalDebuggee::Impl::wait_event(pid_t wpid, RawDebugEvent & evt)
   evt.thr_status = status;
 }
 
-void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
-                                         const RawDebugEvent & evt)
+void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self, const RawDebugEvent & evt)
 {
   const pid_t wtid = evt.thr_entry->first;
   const int status = evt.thr_status;
@@ -224,7 +224,7 @@ void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
         
         case SIGTRAP | (PTRACE_EVENT_EXIT << 8): {
           const int exit_code = ptrace_geteventmsg(wtid);
-          std::cerr << "[*] event_exit (tid = " << wtid 
+          std::cerr << "[*] event_exit (tid = " << wtid
                     << ", code = " << exit_code << ")" << std::endl;
           on_thread_exited(self, thr_e, exit_code);
         } break;
@@ -309,16 +309,16 @@ void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self, DbgThreadEntry & thr
 {
   auto& thr_which = thr_e.second.dbg_thr;
   switch(si.si_code) {
-    case TRAP_TRACE: {
-      SinglestepEvent evt { &self, &thr_which };
-      if(handle_bp_event(self, thr_which, evt))
+    case TRAP_BRKPT: {
+      BreakpointHitEvent evt { &self, &thr_which };
+      if(!handle_bp_event(self, thr_which, evt))
         return;
       notify_event(self, evt);
     } break;
     
-    case TRAP_BRKPT: {
-      BreakpointHitEvent evt { &self, &thr_which };
-      if(!handle_bp_event(self, thr_which, evt))
+    case TRAP_TRACE: {
+      SinglestepEvent evt { &self, &thr_which };
+      if(handle_bp_event(self, thr_which, evt))
         return;
       notify_event(self, evt);
     } break;
@@ -375,8 +375,7 @@ void LocalDebuggee::Impl::on_unknown_event(LocalDebuggee & self,
   notify_event(self, UnknownEvent{ &self });
 }
 
-bool LocalDebuggee::Impl::handle_bp_event(LocalDebuggee & self,
-                                          LocalDebugThread & which,
+bool LocalDebuggee::Impl::handle_bp_event(LocalDebuggee & self, LocalDebugThread & which,
                                           const DebugEvent & dbg_evt)
 {
   if(!self.bp_mgr_.dispatch_bp_hit(self, which, dbg_evt))
@@ -394,7 +393,8 @@ void LocalDebuggee::Impl::notify_event(LocalDebuggee & self, T && evt)
 }
 
 std::unique_ptr<LocalDebuggee>
-  LocalDebuggee::Impl::do_attach_child(const LocalDebuggee & self, process_id pid, unsigned int flags)
+  LocalDebuggee::Impl::do_attach_child(const LocalDebuggee & self, process_id pid,
+                                       unsigned int flags)
 {
   if(pid != new_child_)
     throw std::invalid_argument("invalid child pid");
@@ -406,8 +406,15 @@ std::unique_ptr<LocalDebuggee>
   return dbg_child;
 }
 
-std::unique_ptr<LocalDebuggee> LocalDebuggee::exec(const DbgExecParams & params, unsigned int flags)
+std::unique_ptr<LocalDebuggee>
+  LocalDebuggee::exec(const DbgExecParams & params, unsigned int flags)
 {
+  char cwd[PATH_MAX+1];
+  if(params.flags & DbgExecParams::Flags::HasCwd)
+    std::strncpy(cwd, params.cwd.c_str(), sizeof(cwd) - 1);
+  else
+    ::getcwd(cwd, sizeof(cwd));
+  
   std::vector<const char *> arg_ptrs { params.file.c_str() };
   if(params.flags & DbgExecParams::Flags::HasArgs) {
     for(const auto& arg : params.args)
@@ -437,6 +444,9 @@ std::unique_ptr<LocalDebuggee> LocalDebuggee::exec(const DbgExecParams & params,
   
   if(pid == 0) { // child stub
     if(::ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1)
+      std::exit(errno);
+    
+    if(::chdir(cwd) == -1)
       std::exit(errno);
     
     if(::raise(SIGSTOP) != 0)
@@ -491,7 +501,8 @@ LocalDebuggee::LocalDebuggee(process_id pid)
   : pimpl_( new Impl(pid) ) {}
 
 LocalDebuggee::LocalDebuggee(const LocalDebuggee & parent, process_id pid)
-  : pimpl_( new Impl(pid) ), evt_emitter_( parent.evt_emitter_ ) {}
+  : pimpl_( new Impl(pid) )
+  , evt_emitter_( parent.evt_emitter_ ) {}
 
 LocalDebuggee::LocalDebuggee(LocalDebuggee &&) = default;
 

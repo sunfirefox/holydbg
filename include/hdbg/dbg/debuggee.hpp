@@ -32,13 +32,7 @@ class HDBG_API Debuggee
 public:
   typedef std::function<void(Debuggee &, DebugThread &, ThreadContext, breakpoint_id)> BpHandlerFn;
   
-  Debuggee();
-  Debuggee(const Debuggee&) = delete;
-  Debuggee(Debuggee &&);
   virtual ~Debuggee();
-  
-  Debuggee & operator=(const Debuggee &) = delete;
-  Debuggee & operator=(Debuggee &&);
   
   virtual DebugProcess & process() = 0;
   virtual const DebugProcess & process() const = 0;
@@ -70,12 +64,14 @@ struct DbgExecParams
 {
   enum Flags
   {
-    HasArgs = 1 << 0,
-    HasEnv  = 1 << 1,
+    HasCwd  = 1 << 0,
+    HasArgs = 1 << 1,
+    HasEnv  = 1 << 2,
   };
   
   unsigned int flags = 0;
   std::string file;
+  std::string cwd;
   std::vector<std::string> args;
   std::map<std::string, std::string> env;
 };
