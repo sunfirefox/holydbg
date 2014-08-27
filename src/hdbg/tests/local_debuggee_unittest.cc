@@ -27,9 +27,9 @@ public:
 
 LocalDebuggeeTest::LocalDebuggeeTest()
   : debuggee_([]{
-      hdbg::ExecParams ep;
+      hdbg::DbgExecParams ep;
       ep.file = "dummy_exec";
-      return hdbg::dbg_exec(ep);
+      return hdbg::LocalDebuggee::exec(ep);
     }())
   , dbg_proc_( debuggee_->process() )
   , arch_svc_( hdbg::get_arch_services(dbg_proc_.image().arch()) )

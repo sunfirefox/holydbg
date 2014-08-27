@@ -23,12 +23,12 @@ LocalDebugThread::~LocalDebugThread() = default;
 
 LocalDebugThread & LocalDebugThread::operator=(LocalDebugThread &&) = default;
 
-DebugProcess & LocalDebugThread::process()
+LocalDebugProcess & LocalDebugThread::process()
 {
   return *pimpl_->process_;
 }
 
-const DebugProcess & LocalDebugThread::process() const
+const LocalDebugProcess & LocalDebugThread::process() const
 {
   return *pimpl_->process_;
 }
@@ -46,6 +46,11 @@ void LocalDebugThread::get_context(ThreadContext & thr_ctx) const
 void LocalDebugThread::set_context(const ThreadContext & thr_ctx)
 {
   thr_ctx.apply_to(*this);
+}
+
+void * LocalDebugThread::nativeHandle()
+{
+  return nullptr;
 }
 
 } // namespace hdbg

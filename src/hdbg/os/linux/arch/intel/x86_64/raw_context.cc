@@ -2,6 +2,7 @@
 #include "../../../../../arch/intel/x86_64/reg_ids.hpp"
 
 #include <hdbg/binary_format.hpp>
+#include <hdbg/arch/endian.hpp>
 #include <hdbg/dbg/debug_process.hpp>
 #include <hdbg/dbg/thread_context.hpp>
 #include <hdbg/dbg/local/debug_thread.hpp>
@@ -15,6 +16,29 @@
 #include <system_error>
 
 namespace hdbg {
+
+namespace {
+
+RegValue read_reg_st(const void * st_ptr)
+{
+  const auto st_bytes = reinterpret_cast<const std::uint8_t *>(st_ptr);
+  
+  RegValue rv;
+  const std::size_t sizeof_reg_st = 32;
+  const unsigned int reg_st_uint_entries = sizeof_reg_st / sizeof(unsigned int);
+  for(int i = 0; i < reg_st_uint_entries; ++i) {
+    const auto st_num = native_load<unsigned int>(st_bytes + i * sizeof(unsigned int));
+    rv += st_num;
+    rv <<= sizeof(unsigned int) * 8;
+  }
+  return rv;
+}
+
+#if false
+  void write_reg_st(void * st_ptr, const RegValue & rv);
+#endif
+
+} // namespace
 
 X64_RawContext::X64_RawContext() = default;
 X64_RawContext::X64_RawContext(const X64_RawContext &) = default;
@@ -107,16 +131,14 @@ RegValue X64_RawContext::reg_value(unsigned int reg_idx) const
     case X64_SegFs:  return usr_regs_.fs;
     case X64_SegGs:  return usr_regs_.gs;
     
-#if false
-    case X64_RegSt0: return usr_fpregs_.st_space[0];
-    case X64_RegSt1: return usr_fpregs_.st_space[4];
-    case X64_RegSt2: return usr_fpregs_.st_space[8];
-    case X64_RegSt3: return usr_fpregs_.st_space[12];
-    case X64_RegSt4: return usr_fpregs_.st_space[16];
-    case X64_RegSt5: return usr_fpregs_.st_space[20];
-    case X64_RegSt6: return usr_fpregs_.st_space[24];
-    case X64_RegSt7: return usr_fpregs_.st_space[28];
-#endif
+    case X64_RegSt0: return read_reg_st(&usr_fpregs_.st_space[0 * 4]);
+    case X64_RegSt1: return read_reg_st(&usr_fpregs_.st_space[1 * 4]);
+    case X64_RegSt2: return read_reg_st(&usr_fpregs_.st_space[2 * 4]);
+    case X64_RegSt3: return read_reg_st(&usr_fpregs_.st_space[3 * 4]);
+    case X64_RegSt4: return read_reg_st(&usr_fpregs_.st_space[4 * 4]);
+    case X64_RegSt5: return read_reg_st(&usr_fpregs_.st_space[5 * 4]);
+    case X64_RegSt6: return read_reg_st(&usr_fpregs_.st_space[6 * 4]);
+    case X64_RegSt7: return read_reg_st(&usr_fpregs_.st_space[7 * 4]);
     
     case X64_RegDr0: return u_debugreg_[0];
     case X64_RegDr1: return u_debugreg_[1];
@@ -160,14 +182,14 @@ void X64_RawContext::set_reg(unsigned int reg_idx, const RegValue & value)
     case X64_SegGs:  usr_regs_.gs = value.convert_to<std::uint64_t>(); break;
     
 #if false
-    case X64_RegSt0: usr_fpregs_.st_space[0];
-    case X64_RegSt1: usr_fpregs_.st_space[4];
-    case X64_RegSt2: usr_fpregs_.st_space[8];
-    case X64_RegSt3: usr_fpregs_.st_space[12];
-    case X64_RegSt4: usr_fpregs_.st_space[16];
-    case X64_RegSt5: usr_fpregs_.st_space[20];
-    case X64_RegSt6: usr_fpregs_.st_space[24];
-    case X64_RegSt7: usr_fpregs_.st_space[28];
+    case X64_RegSt0: write_reg_st(&usr_fpregs_.st_space[0 * 4], value); break;
+    case X64_RegSt1: write_reg_st(&usr_fpregs_.st_space[1 * 4], value); break;
+    case X64_RegSt2: write_reg_st(&usr_fpregs_.st_space[2 * 4], value); break;
+    case X64_RegSt3: write_reg_st(&usr_fpregs_.st_space[3 * 4], value); break;
+    case X64_RegSt4: write_reg_st(&usr_fpregs_.st_space[4 * 4], value); break;
+    case X64_RegSt5: write_reg_st(&usr_fpregs_.st_space[5 * 4], value); break;
+    case X64_RegSt6: write_reg_st(&usr_fpregs_.st_space[6 * 4], value); break;
+    case X64_RegSt7: write_reg_st(&usr_fpregs_.st_space[7 * 4], value); break;
 #endif
     
     case X64_RegDr0: u_debugreg_[0] = value.convert_to<std::uint64_t>(); break;

@@ -3,12 +3,12 @@
 
 #include <hdbg/sys_types.hpp>
 #include <hdbg/dbg/debug_thread.hpp>
+#include <hdbg/dbg/local/debug_process.hpp>
 
 #include <memory>
 
 namespace hdbg {
 
-class LocalDebugProcess;
 class ThreadContext;
 
 class HDBG_EXPORT LocalDebugThread final : public DebugThread
@@ -22,13 +22,15 @@ public:
   LocalDebugThread & operator=(const LocalDebugThread &) = delete;
   LocalDebugThread & operator=(LocalDebugThread &&);
   
-  virtual DebugProcess & process() override;
-  virtual const DebugProcess & process() const override;
+  virtual LocalDebugProcess & process() override;
+  virtual const LocalDebugProcess & process() const override;
   
   virtual thread_id id() const override;
   
   virtual void get_context(ThreadContext &) const override;
   virtual void set_context(const ThreadContext &) override;
+  
+  void * nativeHandle();
   
 private:
   class Impl;

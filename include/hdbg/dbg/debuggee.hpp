@@ -8,7 +8,10 @@
 
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace hdbg {
 
@@ -60,7 +63,21 @@ public:
   virtual void remove_bp(breakpoint_id) = 0;
   virtual void remove_all_bps() = 0;
   
-  virtual std::unique_ptr<Debuggee> attach_child(process_id pid) const = 0;
+  virtual std::unique_ptr<Debuggee> attach_child(process_id pid, unsigned int flags = 0) const = 0;
+};
+
+struct DbgExecParams
+{
+  enum Flags
+  {
+    HasArgs = 1 << 0,
+    HasEnv  = 1 << 1,
+  };
+  
+  unsigned int flags = 0;
+  std::string file;
+  std::vector<std::string> args;
+  std::map<std::string, std::string> env;
 };
 
 } // namespace hdbg

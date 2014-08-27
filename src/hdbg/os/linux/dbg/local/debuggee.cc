@@ -66,6 +66,19 @@ std::string make_env_var(const std::string & var, const std::string & value)
   return oss.str();
 }
 
+void ptrace_attach_task(process_id lwp, unsigned int trace_opts)
+{
+  if(::ptrace(PTRACE_ATTACH, lwp, nullptr, nullptr) == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  int status;
+  if(::waitpid(lwp, &status, __WALL) == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  if(::ptrace(PTRACE_SETOPTIONS, lwp, nullptr, trace_opts) == -1)
+    throw std::system_error(errno, std::system_category());
+}
+
 } // namespace
 
 struct LocalDebuggee::Impl
@@ -85,17 +98,17 @@ struct LocalDebuggee::Impl
     int thr_status;
   };
   
-  Impl(LocalDebugProcess && dbg_proc, unsigned int dbg_flags);
+  Impl(process_id pid);
   
-  LocalDebugThread & attach_new_thread(thread_id tid);
-  LocalDebugThread & add_traced_thread(thread_id tid);
+  LocalDebugThread & add_new_thread(thread_id tid);
   void stop_all_threads();
   
   void wait_event(RawDebugEvent & evt);
   void wait_event(pid_t wpid, RawDebugEvent & evt);
   void dispatch_event(LocalDebuggee & self, const RawDebugEvent & evt);
   
-  std::unique_ptr<LocalDebuggee> do_attach_child(const LocalDebuggee & self, process_id pid);
+  std::unique_ptr<LocalDebuggee> do_attach_child(const LocalDebuggee & self, process_id pid,
+                                                 unsigned int flags);
   
   LocalDebugProcess process_;
   std::unordered_map<thread_id, DbgThreadData> threads_;
@@ -120,43 +133,19 @@ private:
   template <typename T>
   void notify_event(LocalDebuggee & self, T && evt);
   
-  const unsigned long trace_opts_;
+  unsigned long trace_opts_;
 };
 
-LocalDebuggee::Impl::Impl(LocalDebugProcess && proc, unsigned int dbg_flags)
-  : process_( std::move(proc) )
-  , trace_opts_( translate_debug_flags(dbg_flags) )
-  , attached_( true )
-{
-  for(const auto& thr_e : enum_threads( process_.id() )) {
-    if(thr_e.tid == process_.id())
-      add_traced_thread(thr_e.tid); // main thread already traced
-    else
-      attach_new_thread(thr_e.tid);
-    
-    if(::ptrace(PTRACE_SETOPTIONS, thr_e.tid, nullptr, trace_opts_) == -1)
-      throw std::system_error(errno, std::system_category());
-  }
-}
+LocalDebuggee::Impl::Impl(process_id pid)
+  : process_( pid, DebugProcess::OpenFlags::AllAccess )
+  , attached_( true ) {}
 
-LocalDebugThread & LocalDebuggee::Impl::add_traced_thread(thread_id tid)
+LocalDebugThread & LocalDebuggee::Impl::add_new_thread(thread_id tid)
 {
-  hdbg::LocalDebugThread w_dbg_thr(process_, tid, DebugThread::OpenFlags::AllAccess);
-  DbgThreadData thr_data { std::move(w_dbg_thr), true, 0 };
+  hdbg::LocalDebugThread dbg_thr (process_, tid, DebugThread::OpenFlags::AllAccess);
+  DbgThreadData thr_data { std::move(dbg_thr), true, 0 };
   const auto ins_p = threads_.emplace(tid, std::move(thr_data));
   return ins_p.first->second.dbg_thr;
-}
-
-LocalDebugThread & LocalDebuggee::Impl::attach_new_thread(thread_id tid)
-{
-  if(::ptrace(PTRACE_ATTACH, tid, nullptr, nullptr) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  int status;
-  if(::waitpid(tid, &status, __WALL) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  return add_traced_thread(tid);
 }
 
 void LocalDebuggee::Impl::stop_all_threads()
@@ -260,8 +249,7 @@ void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self,
   }
 }
 
-void LocalDebuggee::Impl::on_process_created(LocalDebuggee & self,
-                                             DbgThreadEntry & thr_e,
+void LocalDebuggee::Impl::on_process_created(LocalDebuggee & self, DbgThreadEntry & thr_e,
                                              process_id new_pid)
 {
   new_child_ = new_pid;
@@ -288,21 +276,19 @@ void LocalDebuggee::Impl::on_process_killed(LocalDebuggee & self, int sig)
   attached_ = false;
 }
 
-void LocalDebuggee::Impl::on_thread_created(LocalDebuggee & self,
-                                            DbgThreadEntry & thr_e,
+void LocalDebuggee::Impl::on_thread_created(LocalDebuggee & self, DbgThreadEntry & thr_e,
                                             thread_id new_tid)
 {
   int status;
   if(::waitpid(new_tid, &status, __WALL) == -1)
     throw std::system_error(errno, std::system_category());
-  auto& new_thr = add_traced_thread(new_tid);
+  auto& new_thr = add_new_thread(new_tid);
   
   auto& thr_which = thr_e.second.dbg_thr;
   notify_event(self, ThreadCreatedEvent{ &self, &thr_which ,&new_thr });
 }
 
-void LocalDebuggee::Impl::on_thread_exited(LocalDebuggee & self,
-                                           DbgThreadEntry & thr_e,
+void LocalDebuggee::Impl::on_thread_exited(LocalDebuggee & self, DbgThreadEntry & thr_e,
                                            int exit_code)
 {
   auto& thr_which = thr_e.second.dbg_thr;
@@ -313,8 +299,7 @@ void LocalDebuggee::Impl::on_thread_exited(LocalDebuggee & self,
     threads_.erase(tid);
 }
 
-void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self,
-                                      DbgThreadEntry & thr_e,
+void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self, DbgThreadEntry & thr_e,
                                       const siginfo_t & si)
 {
   auto& thr_which = thr_e.second.dbg_thr;
@@ -343,8 +328,7 @@ void LocalDebuggee::Impl::on_sig_trap(LocalDebuggee & self,
   thr_e.second.sig_deliv = evt_ign_ ? 0 : SIGTRAP;
 }
 
-void LocalDebuggee::Impl::on_signal(LocalDebuggee & self,
-                                    DbgThreadEntry & thr_e,
+void LocalDebuggee::Impl::on_signal(LocalDebuggee & self, DbgThreadEntry & thr_e,
                                     const siginfo_t & si)
 {
   auto& thr_which = thr_e.second.dbg_thr;
@@ -405,27 +389,104 @@ void LocalDebuggee::Impl::notify_event(LocalDebuggee & self, T && evt)
 }
 
 std::unique_ptr<LocalDebuggee>
-  LocalDebuggee::Impl::do_attach_child(const LocalDebuggee & self, process_id pid)
+  LocalDebuggee::Impl::do_attach_child(const LocalDebuggee & self, process_id pid, unsigned int flags)
 {
   if(pid != new_child_)
     throw std::invalid_argument("invalid child pid");
   
-  LocalDebugProcess dbg_proc ( pid, DebugProcess::OpenFlags::AllAccess );
-  std::unique_ptr<LocalDebuggee> dbg_ptr ( new LocalDebuggee(self, std::move(dbg_proc)) );
-  
+  std::unique_ptr<LocalDebuggee> dbg_child ( new LocalDebuggee(self, pid) );
+
   child_detach_ = false;
   new_child_ = 0;
-  return dbg_ptr;
+  return dbg_child;
 }
 
-LocalDebuggee::LocalDebuggee(LocalDebugProcess && dbg_proc, int dbg_flags)
-  : dbg_flags_( dbg_flags )
-  , pimpl_( new Impl(std::move(dbg_proc), dbg_flags) ) {}
+std::unique_ptr<LocalDebuggee> LocalDebuggee::exec(const DbgExecParams & params, unsigned int flags)
+{
+  std::vector<const char *> arg_ptrs { params.file.c_str() };
+  if(params.flags & DbgExecParams::Flags::HasArgs) {
+    for(const auto& arg : params.args)
+      arg_ptrs.push_back(arg.c_str());
+  }
+  arg_ptrs.push_back(nullptr);
+  char ** const execve_argv = const_cast<char **>(arg_ptrs.data());
+  
+  char ** execve_envp = nullptr;
+  std::vector<std::string> env_vars;
+  std::vector<const char *> env_var_ptrs;
+  if(params.flags & DbgExecParams::Flags::HasEnv) {
+    for(const auto& envp: params.env) {
+      const auto env_var = make_env_var(envp.first, envp.second);
+      env_vars.emplace_back(std::move(env_var));
+      env_var_ptrs.push_back(env_vars.back().c_str());
+    }
+    env_var_ptrs.push_back(nullptr);
+    execve_envp = const_cast<char **>(env_var_ptrs.data());
+  } else {
+    execve_envp = ::environ;
+  }
+  
+  const pid_t pid = ::fork();
+  if(pid == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  if(pid == 0) { // child stub
+    if(::ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1)
+      std::exit(errno);
+    
+    if(::raise(SIGSTOP) != 0)
+      std::exit(errno);
+    
+    ::execve(execve_argv[0], execve_argv, execve_envp);
+    std::exit(errno);
+  }
+  
+  int status;
+  if(::waitpid(pid, &status, WUNTRACED) == -1) // sigstop
+    throw std::system_error(errno, std::system_category());
+  if(WIFEXITED(status))
+    throw std::system_error(WEXITSTATUS(status), std::system_category());
+  
+  const unsigned long trace_opts = translate_debug_flags(flags);
+  if(::ptrace(PTRACE_SETOPTIONS, pid, nullptr, trace_opts) == -1)
+    throw std::system_error(errno, std::system_category());
+  if(::ptrace(PTRACE_CONT, pid, nullptr, nullptr) == -1)
+    throw std::system_error(errno, std::system_category());
+  if(::waitpid(pid, &status, 0) == -1) // sigtrap
+    throw std::system_error(errno, std::system_category());
+  if(WIFEXITED(status))
+    throw std::system_error(WEXITSTATUS(status), std::system_category());
+  
+  std::unique_ptr<LocalDebuggee> debuggee ( new LocalDebuggee(pid) );
+  debuggee->pimpl_->add_new_thread(pid);
+  return debuggee;
+}
 
-LocalDebuggee::LocalDebuggee(const LocalDebuggee & parent, LocalDebugProcess && dbg_proc)
-  : dbg_flags_( parent.dbg_flags_ )
-  , evt_emitter_( parent.evt_emitter_ )
-  , pimpl_( new Impl(std::move(dbg_proc), dbg_flags_) ) {}
+std::unique_ptr<LocalDebuggee> LocalDebuggee::attach(process_id pid, unsigned int flags)
+{
+  if(::kill(pid, SIGSTOP) == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  const unsigned long trace_opts = translate_debug_flags(flags);
+  ptrace_attach_task(pid, trace_opts);
+  
+  std::unique_ptr<LocalDebuggee> debuggee ( new LocalDebuggee(pid) );
+  debuggee->pimpl_->add_new_thread(pid);
+  
+  for(const auto& thr_e : enum_threads(pid)) {
+    if(thr_e.tid != pid) {
+      ptrace_attach_task(thr_e.tid, trace_opts);
+      debuggee->pimpl_->add_new_thread(thr_e.tid);
+    }
+  }
+  return debuggee;
+}
+
+LocalDebuggee::LocalDebuggee(process_id pid)
+  : pimpl_( new Impl(pid) ) {}
+
+LocalDebuggee::LocalDebuggee(const LocalDebuggee & parent, process_id pid)
+  : pimpl_( new Impl(pid) ), evt_emitter_( parent.evt_emitter_ ) {}
 
 LocalDebuggee::LocalDebuggee(LocalDebuggee &&) = default;
 
@@ -435,25 +496,25 @@ LocalDebuggee::~LocalDebuggee()
     std::terminate(); // detach or kill? can't decide
 }
 
-DebugProcess & LocalDebuggee::process()
+LocalDebugProcess & LocalDebuggee::process()
 {
   assert( attached() );
   return pimpl_->process_;
 }
 
-const DebugProcess & LocalDebuggee::process() const
+const LocalDebugProcess & LocalDebuggee::process() const
 {
   assert( attached() );
   return pimpl_->process_;
 }
 
-DebugThread & LocalDebuggee::get_thread(thread_id tid)
+LocalDebugThread & LocalDebuggee::get_thread(thread_id tid)
 {
   assert( attached() );
   return pimpl_->threads_.at(tid).dbg_thr;
 }
 
-const DebugThread & LocalDebuggee::get_thread(thread_id tid) const
+const LocalDebugThread & LocalDebuggee::get_thread(thread_id tid) const
 {
   assert( attached() );
   return pimpl_->threads_.at(tid).dbg_thr;
@@ -508,7 +569,6 @@ void LocalDebuggee::detach()
 void LocalDebuggee::kill()
 {
   assert( attached() );
-  
   pimpl_->process_.kill(true);
   pimpl_->attached_ = false;
 }
@@ -547,85 +607,10 @@ void LocalDebuggee::remove_all_bps()
   bp_mgr_.remove_all_bps();
 }
 
-std::unique_ptr<Debuggee> LocalDebuggee::attach_child(process_id pid) const
+std::unique_ptr<Debuggee> LocalDebuggee::attach_child(process_id pid, unsigned int flags) const
 {
-  return pimpl_->do_attach_child(*this, pid);
-}
-
-std::unique_ptr<LocalDebuggee> dbg_exec(const ExecParams & params, unsigned int flags)
-{
-  std::vector<const char *> arg_ptrs { params.file.c_str() };
-  if(params.flags & ExecParams::Flags::HasArgs) {
-    for(const auto& arg: params.args)
-      arg_ptrs.push_back(arg.c_str());
-  }
-  arg_ptrs.push_back(nullptr);
-  char ** const execve_argv = const_cast<char **>(arg_ptrs.data());
-  
-  char ** execve_envp = nullptr;
-  std::vector<std::string> env_vars;
-  std::vector<const char *> env_var_ptrs;
-  if(params.flags & ExecParams::Flags::HasEnv) {
-    for(const auto& envp: params.env) {
-      const auto env_var = make_env_var(envp.first, envp.second);
-      env_vars.emplace_back(std::move(env_var));
-      env_var_ptrs.push_back(env_vars.back().c_str());
-    }
-    env_var_ptrs.push_back(nullptr);
-    execve_envp = const_cast<char **>(env_var_ptrs.data());
-  } else {
-    execve_envp = ::environ;
-  }
-  
-  const pid_t pid = ::fork();
-  if(pid == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  if(pid == 0) { // child stub
-    if(::ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1)
-      std::exit(errno);
-    
-    if(::raise(SIGSTOP) != 0)
-      std::exit(errno);
-    
-    ::execve(execve_argv[0], execve_argv, execve_envp);
-    std::exit(errno);
-  }
-  
-  int status;
-  if(::waitpid(pid, &status, WUNTRACED) == -1) // sigstop
-    throw std::system_error(errno, std::system_category());
-  if(WIFEXITED(status))
-    throw std::system_error(WEXITSTATUS(status), std::system_category());
-  
-  if(::ptrace(PTRACE_CONT, pid, nullptr, nullptr) == -1)
-    throw std::system_error(errno, std::system_category());
-  if(::waitpid(pid, &status, 0) == -1) // sigtrap
-    throw std::system_error(errno, std::system_category());
-  if(WIFEXITED(status))
-    throw std::system_error(WEXITSTATUS(status), std::system_category());
-  
-  ProcessKillGuard pk_guard( pid, SIGKILL );
-  LocalDebugProcess dbg_proc( pid, DebugProcess::OpenFlags::AllAccess );
-  std::unique_ptr<LocalDebuggee> dbg_ptr( new LocalDebuggee(std::move(dbg_proc), flags) );
-  pk_guard.cancel();
-  return dbg_ptr;
-}
-
-std::unique_ptr<LocalDebuggee> dbg_attach(process_id pid, unsigned int flags)
-{
-  if(::kill(pid, SIGSTOP) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  if(::ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  if(::waitpid(pid, nullptr, 0) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  LocalDebugProcess dbg_proc(pid, DebugProcess::OpenFlags::AllAccess);
-  std::unique_ptr<LocalDebuggee> dbg_instance( new LocalDebuggee(std::move(dbg_proc), flags) );
-  return dbg_instance;
+  assert( attached() );
+  return pimpl_->do_attach_child(*this, pid, flags);
 }
 
 } // namespace hdbg

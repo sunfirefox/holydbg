@@ -23,9 +23,9 @@ public:
 
 ThreadContextTest::ThreadContextTest()
   : debuggee_([]{
-      hdbg::ExecParams ep;
+      hdbg::DbgExecParams ep;
       ep.file = "dummy_exec";
-      return hdbg::dbg_exec(ep);
+      return hdbg::LocalDebuggee::exec(ep);
     }())
   , dbg_thr_([this]{
       const auto& dbg_proc = debuggee_->process();

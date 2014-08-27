@@ -30,6 +30,8 @@ public:
   virtual std::size_t read_mem(std::uintptr_t from, std::size_t len, void * to) const override;
   virtual std::size_t write_mem(std::uintptr_t where, std::size_t len, const void * what) override;
   
+  void * nativeHandle();
+  
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl_;

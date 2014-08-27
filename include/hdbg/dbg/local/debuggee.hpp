@@ -5,29 +5,29 @@
 #include <hdbg/dbg/debuggee.hpp>
 #include <hdbg/dbg/debug_event.hpp>
 #include <hdbg/dbg/breakpoint_manager.hpp>
+#include <hdbg/dbg/local/debug_process.hpp>
+#include <hdbg/dbg/local/debug_thread.hpp>
 
-#include <map>
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace hdbg {
 
-class LocalDebugProcess;
-
-class HDBG_EXPORT LocalDebuggee final : public Debuggee
+class HDBG_EXPORT LocalDebuggee final
+  : public Debuggee
 {
 public:
-  LocalDebuggee(LocalDebugProcess &&, int dbgflags);
+  static std::unique_ptr<LocalDebuggee> exec(const DbgExecParams & params, unsigned int flags = 0);
+  static std::unique_ptr<LocalDebuggee> attach(process_id pid, unsigned int flags = 0);
+  
   LocalDebuggee(const LocalDebuggee &) = delete;
   LocalDebuggee(LocalDebuggee &&);
   virtual ~LocalDebuggee();
   
-  virtual DebugProcess & process() override;
-  virtual const DebugProcess & process() const override;
+  virtual LocalDebugProcess & process() override;
+  virtual const LocalDebugProcess & process() const override;
   
-  virtual DebugThread & get_thread(thread_id) override;
-  virtual const DebugThread & get_thread(thread_id) const override;
+  virtual LocalDebugThread & get_thread(thread_id) override;
+  virtual const LocalDebugThread & get_thread(thread_id) const override;
   
   virtual bool attached() const override;
   
@@ -45,12 +45,12 @@ public:
   virtual void remove_bp(breakpoint_id bp_id) override;
   virtual void remove_all_bps() override;
   
-  virtual std::unique_ptr<Debuggee> attach_child(process_id pid) const override;
+  virtual std::unique_ptr<Debuggee> attach_child(process_id pid, unsigned int flags = 0) const override;
   
 private:
-  LocalDebuggee(const LocalDebuggee & parent, LocalDebugProcess && dbg_proc);
+  LocalDebuggee(process_id pid);
+  LocalDebuggee(const LocalDebuggee & parent, process_id pid);
   
-  unsigned int dbg_flags_;
   DebugEventEmitter evt_emitter_;
   BreakpointManager bp_mgr_;
   
@@ -58,22 +58,8 @@ private:
   std::unique_ptr<Impl> pimpl_;
 };
 
-struct ExecParams
-{
-  enum Flags
-  {
-    HasArgs = 1 << 0,
-    HasEnv  = 1 << 1,
-  };
-  
-  unsigned int flags = 0;
-  std::string file;
-  std::vector<std::string> args;
-  std::map<std::string, std::string> env;
-};
-
-HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_exec(const ExecParams & params, unsigned int flags = 0);
-HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_attach(process_id pid, unsigned int flags = 0);
+// HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_exec(const DbgExecParams & params, unsigned int flags = 0);
+// HDBG_EXPORT std::unique_ptr<LocalDebuggee> dbg_attach(process_id pid, unsigned int flags = 0);
 
 } // namespace hdbg
 

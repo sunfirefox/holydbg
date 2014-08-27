@@ -127,4 +127,9 @@ std::size_t LocalDebugProcess::write_mem(std::uintptr_t where, std::size_t len, 
   return written;
 }
 
+void * LocalDebugProcess::nativeHandle()
+{
+  return nullptr;
+}
+
 } // namespace hdbg
