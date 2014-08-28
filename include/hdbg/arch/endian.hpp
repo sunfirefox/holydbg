@@ -14,16 +14,16 @@ namespace detail {
 template <std::size_t N> inline
 void ecopy_N(const void * from, void * to)
 {
-  const auto bytes_from = reinterpret_cast<const std::uint8_t *>(from);
-  const auto bytes_to = reinterpret_cast<std::uint8_t *>(to);
+  const auto bytes_from = static_cast<const std::uint8_t *>(from);
+  const auto bytes_to = static_cast<std::uint8_t *>(to);
   std::copy(bytes_from, bytes_from + N, bytes_to);
 }
 
 template <std::size_t N> inline
 void ecopy_rev_N(const void * from, void * to)
 {
-  const auto bytes_from = reinterpret_cast<const std::uint8_t *>(from);
-  const auto bytes_to = reinterpret_cast<std::uint8_t *>(to);
+  const auto bytes_from = static_cast<const std::uint8_t *>(from);
+  const auto bytes_to = static_cast<std::uint8_t *>(to);
   ecopy_rev_N<N / 2>(bytes_from, bytes_to + N / 2);
   ecopy_rev_N<N / 2>(bytes_from + N / 2, bytes_to);
 }
@@ -31,64 +31,50 @@ void ecopy_rev_N(const void * from, void * to)
 template <> inline
 void ecopy_rev_N<sizeof(std::uint8_t)>(const void * from, void * to)
 {
-  const auto bytes_from = reinterpret_cast<const std::uint8_t *>(from);
-  const auto bytes_to = reinterpret_cast<std::uint8_t *>(to);
+  const auto bytes_from = static_cast<const std::uint8_t *>(from);
+  const auto bytes_to = static_cast<std::uint8_t *>(to);
   *bytes_to = *bytes_from;
 }
 
+template <std::size_t N> inline
+void be_read_N(const void * from, void * to)
+{
 #ifdef HOLYDBG_ENDIAN_BE
-
-template <std::size_t N> inline
-void be_read_N(const void * from, void * to)
-{
   ecopy_N<N>(from, to);
-}
-
-template <std::size_t size> inline
-void le_read_N(const void * from, void * to)
-{
+#else  // HOLYDBG_ENDIAN_BE
   ecopy_rev_N<N>(from, to);
-}
-
-template <std::size_t N> inline
-void be_write_N(void * to, const void * from)
-{
-  ecopy_N<N>(from, to);
-}
-
-template <std::size_t size> inline
-void le_write_N(void * to, const void * from)
-{
-  ecopy_rev_N(from, to);
-}
-
-#else // HOLYDBG_ENDIAN_BE
-
-template <std::size_t N> inline
-void be_read_N(const void * from, void * to)
-{
-  ecopy_rev_N<N>(from, to);
-}
-
-template <std::size_t N> inline
-void le_read_N(const void * from, void * to)
-{
-  ecopy_N<N>(from, to);
-}
-
-template <std::size_t N> inline
-void be_write_N(void * to, const void * from)
-{
-  ecopy_rev_N<N>(from, to);
-}
-
-template <std::size_t N> inline
-void le_write_N(void * to, const void * from)
-{
-  ecopy_N<N>(from, to);
-}
-
 #endif // HOLYDBG_ENDIAN_BE
+}
+
+template <std::size_t N> inline
+void le_read_N(const void * from, void * to)
+{
+#ifdef HOLYDBG_ENDIAN_BE
+  ecopy_rev_N<N>(from, to);
+#else  // HOLYDBG_ENDIAN_BE
+  ecopy_N<N>(from, to);
+#endif // HOLYDBG_ENDIAN_BE
+}
+
+template <std::size_t N> inline
+void be_write_N(void * to, const void * from)
+{
+#ifdef HOLYDBG_ENDIAN_BE
+  ecopy_N<N>(from, to);
+#else  // HOLYDBG_ENDIAN_BE
+  ecopy_rev_N<N>(from, to);
+#endif // HOLYDBG_ENDIAN_BE
+}
+
+template <std::size_t N> inline
+void le_write_N(void * to, const void * from)
+{
+#ifdef HOLYDBG_ENDIAN_BE
+  ecopy_rev_N(from, to);
+#else  // HOLYDBG_ENDIAN_BE
+  ecopy_N<N>(from, to);
+#endif // HOLYDBG_ENDIAN_BE
+}
 
 } // namespace detail
 
@@ -117,7 +103,7 @@ void be_load_into(const void * from, T & out)
 template <typename T, std::size_t N>
 void be_load_into(const void * from, T (&out)[N])
 {
-  const auto tsfrom = reinterpret_cast<const T *>(from);
+  const auto tsfrom = static_cast<const T *>(from);
   for(unsigned int i = 0; i < N; ++i)
     out[i] = be_load<T>(tsfrom + i);
 }
@@ -131,7 +117,7 @@ void le_load_into(const void * from, T & out)
 template <typename T, std::size_t N>
 void le_load_into(const void * from, T (&out)[N])
 {
-  const auto tsfrom = reinterpret_cast<const T *>(from);
+  const auto tsfrom = static_cast<const T *>(from);
   for(unsigned int i = 0; i < N; ++i)
     out[i] = le_load<T>(tsfrom + i);
 }
@@ -145,7 +131,7 @@ void be_store(void * where, const T & what)
 template <typename T, std::size_t N>
 void be_store(void * where, const T (&what)[N])
 {
-  const auto tswhere = reinterpret_cast<T *>(where);
+  const auto tswhere = static_cast<T *>(where);
   for(unsigned int i = 0; i < N; ++i)
     be_store(tswhere + i, what[i]);
 }
@@ -159,7 +145,7 @@ void le_store(void * where, const T & what)
 template <typename T, std::size_t N>
 void le_store(void * where, const T (&what)[N])
 {
-  const auto tswhere = reinterpret_cast<T *>(where);
+  const auto tswhere = static_cast<T *>(where);
   for(unsigned int i = 0; i < N; ++i)
     le_store(tswhere + i, what[i]);
 }

@@ -110,7 +110,7 @@ template <>
 Foo be_load<Foo>(const void * from)
 {
   Foo foo;
-  const auto bytes = reinterpret_cast<const std::uint8_t *>(from);
+  const auto bytes = static_cast<const std::uint8_t *>(from);
   be_load_into(bytes + offsetof(Foo, a), foo.a);
   be_load_into(bytes + offsetof(Foo, b), foo.b);
   be_load_into(bytes + offsetof(Foo, c), foo.c);
@@ -120,7 +120,7 @@ Foo be_load<Foo>(const void * from)
 template <>
 Foo le_load<Foo>(const void * from)
 {
-  const auto bytes = reinterpret_cast<const std::uint8_t *>(from);
+  const auto bytes = static_cast<const std::uint8_t *>(from);
   Foo foo;
   le_load_into(bytes + offsetof(Foo, a), foo.a);
   le_load_into(bytes + offsetof(Foo, b), foo.b);
@@ -131,7 +131,7 @@ Foo le_load<Foo>(const void * from)
 template <>
 void be_store(void * to, const Foo & foo)
 {
-  const auto bytes = reinterpret_cast<std::uint8_t *>(to);
+  const auto bytes = static_cast<std::uint8_t *>(to);
   be_store(bytes + offsetof(Foo, a), foo.a);
   be_store(bytes + offsetof(Foo, b), foo.b);
   be_store(bytes + offsetof(Foo, c), foo.c);
@@ -140,7 +140,7 @@ void be_store(void * to, const Foo & foo)
 template <>
 void le_store(void * to, const Foo & foo)
 {
-  const auto bytes = reinterpret_cast<std::uint8_t *>(to);
+  const auto bytes = static_cast<std::uint8_t *>(to);
   le_store(bytes + offsetof(Foo, a), foo.a);
   le_store(bytes + offsetof(Foo, b), foo.b);
   le_store(bytes + offsetof(Foo, c), foo.c);
