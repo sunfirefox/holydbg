@@ -20,7 +20,7 @@ public:
   virtual ~LocalDebuggeeTest();
   
   std::unique_ptr<hdbg::LocalDebuggee> debuggee_;
-  hdbg::DebugProcess & dbg_proc_;
+  hdbg::LocalDebugProcess & dbg_proc_;
   hdbg::ArchServices & arch_svc_;
   std::uintptr_t entry_pt_;
 };
@@ -33,7 +33,7 @@ LocalDebuggeeTest::LocalDebuggeeTest()
     }())
   , dbg_proc_( debuggee_->process() )
   , arch_svc_( hdbg::get_arch_services(dbg_proc_.image().arch()) )
-  , entry_pt_( dbg_proc_.image_base() + dbg_proc_.image().entry() ) {}
+  , entry_pt_( dbg_proc_.image_base() + dbg_proc_.image().entry_point() ) {}
 
 LocalDebuggeeTest::~LocalDebuggeeTest()
 {
@@ -41,7 +41,7 @@ LocalDebuggeeTest::~LocalDebuggeeTest()
 }
 
 TEST_F(LocalDebuggeeTest, DbgExecRun) {
-  ASSERT_NO_THROW(debuggee_->run());
+  ASSERT_NO_THROW( debuggee_->run() );
 }
 
 TEST_F(LocalDebuggeeTest, SetSwBpx) {

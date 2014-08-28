@@ -112,21 +112,4 @@ Elf64_Phdr le_load(const void * from)
   return phdr;
 }
 
-namespace detail {
-
-std::string rem_load_str(const DebugProcess & dbg_proc, std::uintptr_t addr)
-{
-  std::ostringstream oss;
-  unsigned int offs = 0;
-  char c;
-  do {
-    dbg_proc.read_mem(addr + offs, sizeof(char), &c);
-    oss << c;
-    ++offs;
-  } while(c != '\0');
-  return oss.str();
-}
-
-} // namespace detail
-
 } // namespace hdbg
