@@ -3,7 +3,6 @@
 #include <hdbg/binfmt/from_image.hpp>
 #include <hdbg/enum/enum_mempages.hpp>
 
-#define _POSIX_C_SOURCE 200809L
 #include <sys/types.h>
 #include <sys/ptrace.h>
 #include <sys/stat.h>

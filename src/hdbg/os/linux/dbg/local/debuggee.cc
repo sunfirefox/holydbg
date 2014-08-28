@@ -23,64 +23,6 @@
 
 namespace hdbg {
 
-namespace {
-
-unsigned long translate_debug_flags(unsigned int dbg_flags)
-{
-  return PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK      |
-         PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE |
-         PTRACE_O_TRACEEXIT  |
-         ((dbg_flags & DebugFlags::KillOnExit) ? PTRACE_O_EXITKILL : 0);
-}
-
-unsigned long ptrace_geteventmsg(pid_t pid)
-{
-  unsigned long evt_msg;
-  if(::ptrace(PTRACE_GETEVENTMSG, pid, nullptr, &evt_msg) == -1)
-    throw std::system_error(errno, std::system_category());
-  return evt_msg;
-}
-
-void ptrace_getsiginfo(pid_t pid, siginfo_t & si)
-{
-  if(::ptrace(PTRACE_GETSIGINFO, pid, nullptr, &si) == -1)
-    throw std::system_error(errno, std::system_category());
-}
-
-void ptrace_singlestep(pid_t pid, int sig)
-{
-  if(::ptrace(PTRACE_SINGLESTEP, pid, nullptr, sig) == -1)
-    throw std::system_error(errno, std::system_category());
-}
-
-void tgkill(pid_t tgid, pid_t tid, int sig)
-{
-  if(syscall(SYS_tgkill, tgid, tid, sig) == -1)
-    throw std::system_error(errno, std::system_category());
-}
-
-std::string make_env_var(const std::string & var, const std::string & value)
-{
-  std::ostringstream oss;
-  oss << var << '=' << value;
-  return oss.str();
-}
-
-void ptrace_attach_task(process_id lwp, unsigned int trace_opts)
-{
-  if(::ptrace(PTRACE_ATTACH, lwp, nullptr, nullptr) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  int status;
-  if(::waitpid(lwp, &status, __WALL) == -1)
-    throw std::system_error(errno, std::system_category());
-  
-  if(::ptrace(PTRACE_SETOPTIONS, lwp, nullptr, trace_opts) == -1)
-    throw std::system_error(errno, std::system_category());
-}
-
-} // namespace
-
 struct LocalDebuggee::Impl
 {
   struct DbgThreadData
@@ -145,6 +87,16 @@ LocalDebugThread & LocalDebuggee::Impl::add_new_thread(thread_id tid)
   return ins_p.first->second.dbg_thr;
 }
 
+namespace {
+
+void tgkill(pid_t tgid, pid_t tid, int sig)
+{
+  if(syscall(SYS_tgkill, tgid, tid, sig) == -1)
+    throw std::system_error(errno, std::system_category());
+}
+
+} // namespace
+
 void LocalDebuggee::Impl::stop_all_threads()
 {
   for(auto& thr_e : threads_) {
@@ -184,6 +136,24 @@ void LocalDebuggee::Impl::wait_event(pid_t wpid, RawDebugEvent & evt)
   evt.thr_entry = &*thr_itr;
   evt.thr_status = status;
 }
+
+namespace {
+
+unsigned long ptrace_geteventmsg(pid_t pid)
+{
+  unsigned long evt_msg;
+  if(::ptrace(PTRACE_GETEVENTMSG, pid, nullptr, &evt_msg) == -1)
+    throw std::system_error(errno, std::system_category());
+  return evt_msg;
+}
+
+void ptrace_getsiginfo(pid_t pid, siginfo_t & si)
+{
+  if(::ptrace(PTRACE_GETSIGINFO, pid, nullptr, &si) == -1)
+    throw std::system_error(errno, std::system_category());
+}
+
+} // namespace
 
 void LocalDebuggee::Impl::dispatch_event(LocalDebuggee & self, const RawDebugEvent & evt)
 {
@@ -406,6 +376,25 @@ std::unique_ptr<LocalDebuggee>
   return dbg_child;
 }
 
+namespace {
+
+unsigned long translate_debug_flags(unsigned int dbg_flags)
+{
+  return PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK      |
+         PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE |
+         PTRACE_O_TRACEEXIT  |
+         ((dbg_flags & DebugFlags::KillOnExit) ? PTRACE_O_EXITKILL : 0);
+}
+
+std::string make_env_var(const std::string & var, const std::string & value)
+{
+  std::ostringstream oss;
+  oss << var << '=' << value;
+  return oss.str();
+}
+
+} // namespace
+
 std::unique_ptr<LocalDebuggee>
   LocalDebuggee::exec(const DbgExecParams & params, unsigned int flags)
 {
@@ -477,6 +466,23 @@ std::unique_ptr<LocalDebuggee>
   return debuggee;
 }
 
+namespace {
+
+void ptrace_attach_task(process_id lwp, unsigned int trace_opts)
+{
+  if(::ptrace(PTRACE_ATTACH, lwp, nullptr, nullptr) == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  int status;
+  if(::waitpid(lwp, &status, __WALL) == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  if(::ptrace(PTRACE_SETOPTIONS, lwp, nullptr, trace_opts) == -1)
+    throw std::system_error(errno, std::system_category());
+}
+
+} // namespace
+
 std::unique_ptr<LocalDebuggee> LocalDebuggee::attach(process_id pid, unsigned int flags)
 {
   if(::kill(pid, SIGSTOP) == -1)
@@ -540,6 +546,16 @@ bool LocalDebuggee::attached() const
 {
   return pimpl_->attached_;
 }
+
+namespace {
+
+void ptrace_singlestep(pid_t pid, int sig)
+{
+  if(::ptrace(PTRACE_SINGLESTEP, pid, nullptr, sig) == -1)
+    throw std::system_error(errno, std::system_category());
+}
+
+} // namespace
 
 void LocalDebuggee::singlestep(DebugThread & run_thr)
 {

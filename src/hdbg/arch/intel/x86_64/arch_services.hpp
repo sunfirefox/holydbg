@@ -27,6 +27,9 @@ public:
   virtual unsigned int get_flag(const ThreadContext & thr_ctx, unsigned int flg_idx) const override;
   virtual void set_flag(ThreadContext & thr_ctx, unsigned int flg_idx, unsigned int value) const override;
   
+  virtual void run_trace(CodeTracer & tracer, std::uintptr_t vaddr, const void * data,
+                         std::size_t len, std::vector<std::uintptr_t> & untraced) const override;
+  
   virtual ArchInternals & get_internals() const override;
 };
 
