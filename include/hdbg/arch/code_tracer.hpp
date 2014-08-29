@@ -19,8 +19,8 @@ public:
   virtual void link_block(void * parent, void * child) = 0;
   
   virtual void * get_block(std::uintptr_t addr) const = 0;
+  virtual std::uintptr_t block_start(const void * block) const = 0;
   virtual std::size_t block_size(const void * block) const = 0;
-  virtual std::uintptr_t block_addr(const void * block) const = 0;
 };
 
 } // namespace hdbg

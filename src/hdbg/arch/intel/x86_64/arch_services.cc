@@ -1,13 +1,13 @@
 #include "arch_services.hpp"
 
-#include <hdbg/arch/code_tracer.hpp>
-#include <hdbg/dbg/thread_context.hpp>
-
-#include <distorm3/distorm.h>
-
 #include "reg_ids.hpp"
 #include "reg_info.hpp"
 #include "arch_internals.hpp"
+
+#include <hdbg/arch/code_tracer.hpp>
+#include <hdbg/dbg/thread_context.hpp>
+
+#include <distorm.h>
 
 #include <array>
 #include <cassert>
@@ -163,45 +163,85 @@ void X64_ArchServices::set_flag(ThreadContext & thr_ctx, unsigned int flg_idx,
 
 namespace {
 
-void do_run_trace(CodeTracer & tracer, void * root_block, std::uintptr_t vaddr,
-                  const void * data, std::size_t len, std::vector<std::uintptr_t> & untraced);
+struct RunTraceArgs
+{
+  CodeTracer * tracer;
+  std::uintptr_t vaddr;
+  const void * data;
+  std::size_t len;
+  std::vector<std::uintptr_t> * untraced;
+};
 
-bool do_run_trace_fc(CodeTracer & tracer, void * root_block, std::uintptr_t vaddr, const void * data,
-                     std::size_t len, const D3_DInst & inst, std::vector<std::uintptr_t> & untraced)
+void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
+                  std::uintptr_t vaddr, const void * data, std::size_t len);
+
+bool do_run_trace_fc(const RunTraceArgs & rt_args, void * parent_block, const _DInst & inst)
 {
   if(inst.ops[0].type != O_PC)
     return false;
   
   const std::uintptr_t vaddr_dst = INSTRUCTION_GET_TARGET(&inst);
-  if(vaddr_dst > vaddr && vaddr_dst < (vaddr + len)) {
-    const auto bytes = static_cast<const std::uint8_t *>(data);
+  if(rt_args.tracer->get_block(vaddr_dst))
+    return true;
+  
+  const auto vaddr = rt_args.vaddr, vaddr_end = vaddr + rt_args.len;
+  if(vaddr_dst > vaddr && vaddr_dst < vaddr_end) {
+    const auto bytes = static_cast<const std::uint8_t *>(rt_args.data);
     const auto fc_offs = vaddr_dst - vaddr;
     const auto fc_data = bytes + fc_offs;
-    const auto fc_len = len - fc_offs;
-    do_run_trace(tracer, root_block, vaddr_dst, fc_data, fc_len, untraced);
+    const auto fc_len = rt_args.len - fc_offs;
+    do_run_trace(rt_args, parent_block, vaddr_dst, fc_data, fc_len);
   } else {
-    untraced.push_back(vaddr_dst);
+    rt_args.untraced->push_back(vaddr_dst);
   }
   return true;
 }
 
-void do_run_trace(CodeTracer & tracer, void * root_block, std::uintptr_t vaddr,
-                  const void * data, std::size_t len, std::vector<std::uintptr_t> & untraced)
+void * do_run_trace_block(const RunTraceArgs & rt_args, void * parent_block,
+                          std::uintptr_t block_beg, std::uintptr_t block_end, const _DInst & inst,
+                          bool & rt_end)
 {
-  assert(root_block);
-  assert(data);
+  assert(rt_args.tracer);
+  auto& tracer = *rt_args.tracer;
+  void * const child_block = tracer.add_block(block_beg, block_end);
+  tracer.link_block(parent_block, child_block);
+  rt_end = false;
+  switch(META_GET_FC(inst.meta)) {
+    case FC_CALL:
+      do_run_trace_fc(rt_args, child_block, inst);
+      break;
+    
+    case FC_RET:
+      rt_end = true;
+      break;
+    
+    case FC_UNC_BRANCH:
+      do_run_trace_fc(rt_args, child_block, inst);
+      rt_end = true;
+      break;
+    
+    case FC_CND_BRANCH:
+      do_run_trace_fc(rt_args, child_block, inst);
+      break;
+  }
+  return child_block;
+}
+
+void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
+                  std::uintptr_t vaddr, const void * data, std::size_t len)
+{
+  assert(rt_args.tracer);
   
-  D3_CodeInfo ci;
+  _CodeInfo ci;
   ci.codeOffset = vaddr;
   ci.code = static_cast<const std::uint8_t *>(data);
   ci.codeLen = len;
   ci.dt = Decode64Bits;
   ci.features = DF_STOP_ON_FLOW_CONTROL | DF_RETURN_FC_ONLY;
   
-  void * parent_block = root_block;
   while(ci.codeLen > 0) {
     unsigned int instnum;
-    std::array<D3_DInst, 100> insts;
+    std::array<_DInst, 100> insts;
     ::distorm_decompose(&ci, insts.data(), insts.size(), &instnum);
     
     const std::uint8_t * code_ptr = ci.code;
@@ -209,31 +249,19 @@ void do_run_trace(CodeTracer & tracer, void * root_block, std::uintptr_t vaddr,
     std::uintptr_t code_offs = ci.codeOffset;
     
     for(int i = 0; i < instnum; ++i) {
-      const D3_DInst & inst = insts[i];
+      const _DInst & inst = insts[i];
       const std::uintptr_t block_beg = code_offs;
       const std::uintptr_t block_end = inst.addr + inst.size;
       const std::size_t block_sz = block_end - block_beg;
       
-      void * child_block = tracer.add_block(block_beg, block_end);
-      tracer.link_block(parent_block, child_block);
-      
-      switch(META_GET_FC(inst.meta)) {
-        case FC_CALL:
-          do_run_trace_fc(tracer, parent_block, vaddr, data, len, inst, untraced);
-          break;
-        
-        case FC_RET:
+      void * child_block = rt_args.tracer->get_block(inst.addr);
+      if(!child_block) {
+        bool trace_end;
+        child_block = do_run_trace_block(rt_args, parent_block, block_beg, block_end,
+                                         inst, trace_end);
+        if(trace_end)
           return;
-        
-        case FC_UNC_BRANCH:
-          do_run_trace_fc(tracer, parent_block, vaddr, data, len, inst, untraced);
-          return;
-        
-        case FC_CND_BRANCH:
-          do_run_trace_fc(tracer, parent_block, vaddr, data, len, inst, untraced);
-          break;
       }
-      
       code_ptr += block_sz;
       code_len -= block_sz;
       code_offs += block_sz;
@@ -252,10 +280,11 @@ void do_run_trace(CodeTracer & tracer, void * root_block, std::uintptr_t vaddr,
 void X64_ArchServices::run_trace(CodeTracer & tracer, std::uintptr_t vaddr, const void * data,
                                  std::size_t len, std::vector<std::uintptr_t> & untraced) const
 {
-  if(data)
+  if(!data)
     throw std::invalid_argument("null data ptr");
   
-  do_run_trace(tracer, tracer.root_block(), vaddr, data, len, untraced);
+  const RunTraceArgs rt_args { &tracer, vaddr, data, len, &untraced };
+  do_run_trace(rt_args, tracer.root_block(), vaddr, data, len);
 }
 
 ArchInternals & X64_ArchServices::get_internals() const
