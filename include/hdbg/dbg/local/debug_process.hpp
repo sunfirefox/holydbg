@@ -23,7 +23,7 @@ public:
   
   virtual process_id id() const override;
   virtual std::uintptr_t image_base() const override;
-  virtual const BinaryFormat & image() const override;
+  virtual BinaryFormat & image() const override;
   
   virtual void kill(bool force) override;
   

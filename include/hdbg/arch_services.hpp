@@ -37,6 +37,9 @@ public:
   
   virtual void run_trace(CodeTracer & tracer, std::uintptr_t vaddr, const void * data,
                          std::size_t len, std::vector<std::uintptr_t> & untraced) const = 0;
+  virtual void trace_resolve_untraced(CodeTracer & tracer, std::uintptr_t vaddr,
+                                      const void * data, std::size_t len,
+                                      std::vector<std::uintptr_t> & untraced) const = 0;
   
   virtual ArchInternals & get_internals() const = 0;
 };

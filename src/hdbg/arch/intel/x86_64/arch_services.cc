@@ -9,9 +9,11 @@
 
 #include <distorm.h>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <iterator>
 #include <utility>
 #include <stdexcept>
 
@@ -285,6 +287,39 @@ void X64_ArchServices::run_trace(CodeTracer & tracer, std::uintptr_t vaddr, cons
   
   const RunTraceArgs rt_args { &tracer, vaddr, data, len, &untraced };
   do_run_trace(rt_args, tracer.root_block(), vaddr, data, len);
+}
+
+void X64_ArchServices::trace_resolve_untraced(CodeTracer & tracer, std::uintptr_t vaddr,
+                                              const void * data, std::size_t len,
+                                              std::vector<std::uintptr_t> & untraced) const
+{
+  if(!data)
+    throw std::invalid_argument("null data ptr");
+  
+  const auto bytes = static_cast<const std::uint8_t *>(data);
+  const auto vaddr_end = vaddr + len;
+  std::vector<std::uintptr_t> traceable;
+  
+  for(;;) {
+    const auto addr_in_block = [vaddr, vaddr_end](std::uintptr_t tr_vaddr) {
+      return tr_vaddr > vaddr && tr_vaddr <= vaddr_end;
+    };
+    
+    traceable.reserve(untraced.size());
+    std::copy_if(untraced.begin(), untraced.end(), std::back_inserter(traceable), addr_in_block);
+    untraced.erase(std::remove_if(untraced.begin(), untraced.end(), addr_in_block), untraced.end());
+    
+    if(traceable.empty())
+      break;
+    
+    for(auto tr_vaddr : traceable) {
+      const auto tr_offs = tr_vaddr - vaddr;
+      const auto tr_data = bytes + tr_offs;
+      const auto tr_len  = len - tr_offs;
+      run_trace(tracer, tr_vaddr, tr_data, tr_len, untraced);
+    }
+    traceable.clear();
+  }
 }
 
 ArchInternals & X64_ArchServices::get_internals() const

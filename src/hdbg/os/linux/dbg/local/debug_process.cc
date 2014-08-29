@@ -97,7 +97,7 @@ std::uintptr_t LocalDebugProcess::image_base() const
   return pimpl_->base_addr_;
 }
 
-const BinaryFormat & LocalDebugProcess::image() const
+BinaryFormat & LocalDebugProcess::image() const
 {
   if(!pimpl_->image_)
     pimpl_->image_ = binfmt_from_image(*this, pimpl_->base_addr_);
