@@ -69,6 +69,7 @@ void * TestTracer::add_block(std::uintptr_t from, std::uintptr_t to)
     return &*itr;
   }
   
+  // TODO: insert ordered
   blocks_.emplace_back(BlockData{ from, to - from });
   return &blocks_.back();
 }

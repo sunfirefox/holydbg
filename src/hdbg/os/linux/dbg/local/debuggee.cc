@@ -398,33 +398,39 @@ std::string make_env_var(const std::string & var, const std::string & value)
 std::unique_ptr<LocalDebuggee>
   LocalDebuggee::exec(const DbgExecParams & params, unsigned int flags)
 {
-  char cwd[PATH_MAX+1];
-  if(params.flags & DbgExecParams::Flags::HasCwd)
-    std::strncpy(cwd, params.cwd.c_str(), sizeof(cwd) - 1);
-  else
-    ::getcwd(cwd, sizeof(cwd));
-  
-  std::vector<const char *> arg_ptrs { params.file.c_str() };
+  std::vector<std::string> child_args { params.file };
+  std::vector<char *> child_args_p { &child_args.back()[0] };
   if(params.flags & DbgExecParams::Flags::HasArgs) {
-    for(const auto& arg : params.args)
-      arg_ptrs.push_back(arg.c_str());
-  }
-  arg_ptrs.push_back(nullptr);
-  char ** const execve_argv = const_cast<char **>(arg_ptrs.data());
-  
-  char ** execve_envp = nullptr;
-  std::vector<std::string> env_vars;
-  std::vector<const char *> env_var_ptrs;
-  if(params.flags & DbgExecParams::Flags::HasEnv) {
-    for(const auto& envp: params.env) {
-      const auto env_var = make_env_var(envp.first, envp.second);
-      env_vars.emplace_back(std::move(env_var));
-      env_var_ptrs.push_back(env_vars.back().c_str());
+    for(auto arg : params.args) {
+      child_args_p.push_back(&arg[0]);
+      child_args.push_back( std::move(arg) );
     }
-    env_var_ptrs.push_back(nullptr);
-    execve_envp = const_cast<char **>(env_var_ptrs.data());
+  }
+  child_args_p.push_back(nullptr);
+  char ** const child_argv = child_args_p.data();
+  
+  char ** child_envp = nullptr;
+  std::vector<std::string> child_env_vars;
+  std::vector<char *> child_env_var_p;
+  if(params.flags & DbgExecParams::Flags::HasEnv) {
+    for(const auto& env_p: params.env) {
+      auto env_var = make_env_var(env_p.first, env_p.second);
+      child_env_var_p.push_back(&env_var[0]);
+      child_env_vars.emplace_back( std::move(env_var) );
+    }
+    child_env_var_p.push_back(nullptr);
+    child_envp = child_env_var_p.data();
   } else {
-    execve_envp = ::environ;
+    child_envp = ::environ;
+  }
+  
+  char child_cwd[PATH_MAX+1];
+  if(params.flags & DbgExecParams::Flags::HasCwd) {
+    if(params.cwd.length() > PATH_MAX)
+      throw std::length_error("invalid path length (exceeded MAX_PATH)");
+    std::strcpy(child_cwd, params.cwd.c_str());
+  } else {
+    ::getcwd(child_cwd, sizeof(child_cwd));
   }
   
   const pid_t pid = ::fork();
@@ -432,17 +438,17 @@ std::unique_ptr<LocalDebuggee>
     throw std::system_error(errno, std::system_category());
   
   if(pid == 0) { // child stub
-    if(::ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1)
+    if(::chdir(child_cwd) == -1)
       std::exit(errno);
     
-    if(::chdir(cwd) == -1)
+    if(::ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1)
       std::exit(errno);
     
     if(::raise(SIGSTOP) != 0)
       std::exit(errno);
     
-    ::execve(execve_argv[0], execve_argv, execve_envp);
-    std::exit(errno);
+    ::execve(child_argv[0], child_argv, child_envp);
+      std::exit(errno);
   }
   
   int status;
@@ -624,6 +630,9 @@ void LocalDebuggee::discard_event()
 breakpoint_id LocalDebuggee::set_bp(Breakpoint * bp, BpHandlerFn fn)
 {
   assert( attached() );
+  
+  if(!bp)
+    throw std::invalid_argument("null bp ptr");
   return bp_mgr_.set_bp(*this, bp, fn);
 }
 
@@ -636,7 +645,7 @@ void LocalDebuggee::remove_bp(breakpoint_id bp_id)
 void LocalDebuggee::remove_all_bps()
 {
   assert( attached() );
-  bp_mgr_.remove_all_bps();
+  bp_mgr_.remove_all_bps(this);
 }
 
 std::unique_ptr<Debuggee> LocalDebuggee::attach_child(process_id pid, unsigned int flags) const

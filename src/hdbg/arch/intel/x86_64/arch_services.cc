@@ -179,6 +179,9 @@ void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
 
 bool do_run_trace_fc(const RunTraceArgs & rt_args, void * parent_block, const _DInst & inst)
 {
+  assert(rt_args.tracer);
+  assert(rt_args.untraced);
+  
   if(inst.ops[0].type != O_PC)
     return false;
   
@@ -207,6 +210,7 @@ void * do_run_trace_block(const RunTraceArgs & rt_args, void * parent_block,
   auto& tracer = *rt_args.tracer;
   void * const child_block = tracer.add_block(block_beg, block_end);
   tracer.link_block(parent_block, child_block);
+  
   rt_end = false;
   switch(META_GET_FC(inst.meta)) {
     case FC_CALL:
@@ -233,6 +237,7 @@ void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
                   std::uintptr_t vaddr, const void * data, std::size_t len)
 {
   assert(rt_args.tracer);
+  assert(rt_args.data);
   
   _CodeInfo ci;
   ci.codeOffset = vaddr;
@@ -259,7 +264,8 @@ void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
       void * child_block = rt_args.tracer->get_block(inst.addr);
       if(!child_block) {
         bool trace_end;
-        child_block = do_run_trace_block(rt_args, parent_block, block_beg, block_end,
+        child_block = do_run_trace_block(rt_args, parent_block,
+                                         block_beg, block_end,
                                          inst, trace_end);
         if(trace_end)
           return;
@@ -302,7 +308,7 @@ void X64_ArchServices::trace_resolve_untraced(CodeTracer & tracer, std::uintptr_
   
   for(;;) {
     const auto addr_in_block = [vaddr, vaddr_end](std::uintptr_t tr_vaddr) {
-      return tr_vaddr > vaddr && tr_vaddr <= vaddr_end;
+      return tr_vaddr >= vaddr && tr_vaddr < vaddr_end;
     };
     
     traceable.reserve(untraced.size());
