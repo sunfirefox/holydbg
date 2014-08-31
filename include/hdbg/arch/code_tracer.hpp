@@ -17,7 +17,7 @@ public:
   const void * root_block() const;
   
   virtual void * add_block(std::uintptr_t from, std::uintptr_t to) = 0;
-  virtual void remove_block(void * block) = 0;
+  virtual void * add_block(std::uintptr_t addr) = 0;
   virtual void link_block(void * block, void * with_block) = 0;
   
   virtual void * get_block(std::uintptr_t addr) = 0;

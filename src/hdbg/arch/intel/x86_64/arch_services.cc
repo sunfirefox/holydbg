@@ -182,20 +182,24 @@ bool do_run_trace_fc(const RunTraceArgs & rt_args, void * parent_block, const _D
   assert(rt_args.tracer);
   assert(rt_args.untraced);
   
+  auto& tracer = *rt_args.tracer;
+  
   if(inst.ops[0].type != O_PC)
     return false;
   
   const std::uintptr_t vaddr_dst = INSTRUCTION_GET_TARGET(&inst);
-  if(rt_args.tracer->get_block(vaddr_dst))
+  if(tracer.get_block(vaddr_dst))
     return true;
   
   const auto vaddr = rt_args.vaddr, vaddr_end = vaddr + rt_args.len;
+  void * const fc_block = tracer.add_block(vaddr_dst);
+  tracer.link_block(parent_block, fc_block);
   if(vaddr_dst > vaddr && vaddr_dst < vaddr_end) {
     const auto bytes = static_cast<const std::uint8_t *>(rt_args.data);
     const auto fc_offs = vaddr_dst - vaddr;
     const auto fc_data = bytes + fc_offs;
     const auto fc_len = rt_args.len - fc_offs;
-    do_run_trace(rt_args, parent_block, vaddr_dst, fc_data, fc_len);
+    do_run_trace(rt_args, fc_block, vaddr_dst, fc_data, fc_len);
   } else {
     rt_args.untraced->push_back(vaddr_dst);
   }
@@ -207,6 +211,7 @@ void * do_run_trace_block(const RunTraceArgs & rt_args, void * parent_block,
                           bool & rt_end)
 {
   assert(rt_args.tracer);
+  
   auto& tracer = *rt_args.tracer;
   void * const child_block = tracer.add_block(block_beg, block_end);
   tracer.link_block(parent_block, child_block);
@@ -238,6 +243,7 @@ void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
 {
   assert(rt_args.tracer);
   assert(rt_args.data);
+  assert(rt_args.untraced);
   
   _CodeInfo ci;
   ci.codeOffset = vaddr;
@@ -281,6 +287,8 @@ void do_run_trace(const RunTraceArgs & rt_args, void * parent_block,
     ci.codeLen -= offs;
     ci.codeOffset += offs;
   }
+  
+  rt_args.untraced->push_back(ci.codeOffset);
 }
 
 } // namespace
