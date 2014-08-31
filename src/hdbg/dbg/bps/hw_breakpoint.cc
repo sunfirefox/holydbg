@@ -85,7 +85,7 @@ void HwBreakpoint::set_on_thread(DebugThread & dbg_thr)
       thr_ctx_.set_reg(reg_idx, addr_);
       arch_internals.set_hw_bpx_enabled(reg_idx, true, thr_ctx_);
       dbg_thr.set_context(thr_ctx_);
-      bp_regs_[ dbg_thr.id() ] = HwBpxData{ reg_idx, ov_dreg_val };
+      bp_regs_.emplace(dbg_thr.id(), HwBpxData{ reg_idx, ov_dreg_val });
       return;
     }
   }
