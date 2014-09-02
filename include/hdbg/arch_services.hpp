@@ -13,7 +13,7 @@ namespace hdbg {
 
 class ArchInternals;
 class ThreadContext;
-class CodeTracer;
+class TraceSink;
 
 class HDBG_API ArchServices
 {
@@ -35,11 +35,8 @@ public:
   virtual unsigned int get_flag(const ThreadContext & thr_ctx, unsigned int flg_idx) const = 0;
   virtual void set_flag(ThreadContext & thr_ctx, unsigned int flg_idx, unsigned int value) const = 0;
   
-  virtual void run_trace(CodeTracer & tracer, std::uintptr_t vaddr, const void * data,
-                         std::size_t len, std::vector<std::uintptr_t> & untraced) const = 0;
-  virtual void trace_resolve_untraced(CodeTracer & tracer, std::uintptr_t vaddr,
-                                      const void * data, std::size_t len,
-                                      std::vector<std::uintptr_t> & untraced) const = 0;
+  virtual void run_trace(TraceSink & tracer, std::uintptr_t vaddr, const void * data,
+                         std::size_t len, std::vector<std::uintptr_t> & code_paths) const = 0;
   
   virtual ArchInternals & get_internals() const = 0;
 };

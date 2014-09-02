@@ -9,7 +9,7 @@
 #define HOLYDBG_VERSION_MINOR(version) (((version) >>  8) & 0xff)
 #define HOLYDBG_VERSION_PATCH(version) (((version) >>  0) & 0xff)
 
-#define LIBHDBG_VERSION HOLYDBG_MAKE_VERSION(0,2,0)
+#define LIBHDBG_VERSION HOLYDBG_MAKE_VERSION(0,3,0)
 
 #cmakedefine HOLYDBG_OS_WINDOWS
 #cmakedefine HOLYDBG_OS_LINUX

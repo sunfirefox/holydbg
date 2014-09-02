@@ -2,31 +2,32 @@
 
 #include <hdbg/arch_services.hpp>
 #include <hdbg/binary_format.hpp>
-#include <hdbg/arch/code_tracer.hpp>
+#include <hdbg/arch/trace_sink.hpp>
 #include <hdbg/dbg/local/debuggee.hpp>
 #include <hdbg/dbg/local/debug_process.hpp>
 
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 
 class TestTracer
-  : public hdbg::CodeTracer
+  : public hdbg::TraceSink
 {
 public:
   TestTracer();
   virtual ~TestTracer();
   
   virtual void * root_block() override;
-  using CodeTracer::root_block;
+  using TraceSink::root_block;
   
   virtual void * add_block(std::uintptr_t from, std::uintptr_t to) override;
   virtual void * add_block(std::uintptr_t addr) override;
   virtual void link_block(void * parent, void * child) override;
   
   virtual void * get_block(std::uintptr_t addr) override;
-  using CodeTracer::get_block;
+  using TraceSink::get_block;
   
   virtual std::uintptr_t block_begin(const void * block) const override;
   virtual std::uintptr_t block_end(const void * block) const override;
@@ -40,7 +41,6 @@ private:
     
     void * add_block(std::uintptr_t from, std::uintptr_t to);
     void * add_block(std::uintptr_t addr);
-    
     void * get_block(std::uintptr_t addr);
     
     std::uintptr_t begin, end;
@@ -85,26 +85,32 @@ TracerTest::~TracerTest()
 TEST_F(TracerTest, ArchServicesRunTrace) {
   ASSERT_TRUE( test_tracer_engine_ok() );
   
-  const auto entry_pt = proc_img_.entry_point();
+  TestTracer tracer;
+  const auto vbase = dbg_proc_.image_base();
+  const auto entry_pt = vbase + proc_img_.entry_point();
+  std::vector<std::uintptr_t> untraced = { entry_pt };
+  std::vector<std::uint8_t> buf;
+  
   for(const auto& sect : proc_img_.sections()) {
-    if(sect.vaddr <= entry_pt && entry_pt < (sect.vaddr + sect.vsize)) {
+    const auto sect_vbegin = vbase + sect.vaddr;
+    const auto sect_vend = vbase + sect.vaddr + sect.vsize;
+    if(sect_vbegin <= entry_pt && entry_pt < sect_vend) {
+      ASSERT_TRUE(sect.flags & hdbg::BinaryFormat::Section::Readable);
       ASSERT_TRUE(sect.flags & hdbg::BinaryFormat::Section::Executable);
       
-      const auto vbase = dbg_proc_.image_base();
-      const auto tr_start = vbase + proc_img_.entry_point();
-      const auto tr_size = sect.vaddr + sect.vsize - proc_img_.entry_point();
+      const auto vstart = vbase + sect.vaddr;
+      const auto vsize = sect.vsize;
       
-      TestTracer tracer;
-      std::vector<std::uintptr_t> untraced;
-      std::unique_ptr<std::uint8_t[]> sdata { new std::uint8_t[tr_size] };
-      dbg_proc_.read_mem(tr_start, tr_size, sdata.get());
-      arch_svc_.run_trace(tracer, tr_start, sdata.get(), tr_size, untraced);
+      buf.resize(vsize);
+      dbg_proc_.read_mem(vstart, vsize, buf.data());
+      arch_svc_.run_trace(tracer, vstart, buf.data(), vsize, untraced);
     }
   }
+  
+  EXPECT_TRUE(tracer.get_block(entry_pt) != nullptr);
 }
 
-TestTracer::TestTracer()
-  : root_{ 0, 0 } {}
+TestTracer::TestTracer(): root_{ 0, 0 } {}
 
 TestTracer::~TestTracer() = default;
 
@@ -115,18 +121,12 @@ void * TestTracer::root_block()
 
 void * TestTracer::add_block(std::uintptr_t from, std::uintptr_t to)
 {
-  std::cout << "add_block(" << (void *)from << "," << (void *)to << ")" << std::endl;
-  
-  if(from > to)
-    throw std::invalid_argument("invalid block dimensions");
-  
+  EXPECT_LE(from, to);
   return root_.add_block(from, to);
 }
 
 void * TestTracer::add_block(std::uintptr_t addr)
 {
-  std::cout << "add_block(" << (void *)addr << ")" << std::endl;
-  
   return root_.add_block(addr);
 }
 
@@ -175,7 +175,7 @@ void * TestTracer::TraceBlock::add_block(std::uintptr_t from, std::uintptr_t to)
     return this;
   }
   
-  if(from < begin && to < end) {
+  if(std::tie(from, to) < std::tie(begin,end)) {
     if(!left) {
       left.reset( new TraceBlock(from, to) );
       return left.get();
@@ -184,7 +184,7 @@ void * TestTracer::TraceBlock::add_block(std::uintptr_t from, std::uintptr_t to)
     }
   }
   
-  if(from > begin && to > end) {
+  if(std::tie(from, to) > std::tie(begin, end)) {
     if(!right) {
       right.reset( new TraceBlock(from, to) );
       return right.get();
@@ -203,7 +203,7 @@ void * TestTracer::TraceBlock::add_block(std::uintptr_t addr)
 
 void * TestTracer::TraceBlock::get_block(std::uintptr_t addr)
 {
-  if(begin < addr && addr < end)
+  if(begin <= addr && addr < end)
     return this;
   
   if(addr < begin && addr < end)
@@ -211,6 +211,8 @@ void * TestTracer::TraceBlock::get_block(std::uintptr_t addr)
   
   if(addr > begin && addr > end)
     return right ? right->get_block(addr) : nullptr;
+  
+  return nullptr;
 }
 
 bool test_tracer_engine_ok()

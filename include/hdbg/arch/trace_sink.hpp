@@ -1,17 +1,16 @@
-#ifndef __HDBG_ARCH_CODE_TRACER_HPP__
-#define __HDBG_ARCH_CODE_TRACER_HPP__
+#ifndef __HDBG_ARCH_TRACE_SINK_HPP__
+#define __HDBG_ARCH_TRACE_SINK_HPP__
 
 #include <hdbg/config.h>
 
-#include <cstddef>
 #include <cstdint>
 
 namespace hdbg {
 
-class HDBG_API CodeTracer
+class HDBG_API TraceSink
 {
 public:
-  virtual ~CodeTracer() = default;
+  virtual ~TraceSink() = default;
   
   virtual void * root_block() = 0;
   const void * root_block() const;
@@ -29,4 +28,4 @@ public:
 
 } // namespace hdbg
 
-#endif // __HDBG_ARCH_CODE_TRACER_HPP__
+#endif // __HDBG_ARCH_TRACE_SINK_HPP__
