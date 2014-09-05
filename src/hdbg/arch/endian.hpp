@@ -1,7 +1,7 @@
-#ifndef __HDBG_ARCH_ENDIAN_HPP__
-#define __HDBG_ARCH_ENDIAN_HPP__
+#ifndef __HDBG_SRC_ARCH_ENDIAN_HPP__
+#define __HDBG_SRC_ARCH_ENDIAN_HPP__
 
-#include <hdbg/config.h>
+#include "../../config.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -182,4 +182,4 @@ void native_store(void * where, const T & what)
 
 } // namespace hdbg
 
-#endif // __HDBG_ARCH_ENDIAN_HPP__
+#endif // __HDBG_SRC_ARCH_ENDIAN_HPP__

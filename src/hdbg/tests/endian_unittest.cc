@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <hdbg/arch/endian.hpp>
+#include "../arch/endian.hpp"
 
 #include <algorithm>
 #include <cstddef>

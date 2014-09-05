@@ -1,8 +1,6 @@
 #ifndef __HDBG_DBG_THREAD_CONTEXT_HPP__
 #define __HDBG_DBG_THREAD_CONTEXT_HPP__
 
-#include <hdbg/config.h>
-#include <hdbg/arch/endian.hpp>
 #include <hdbg/arch/reg_value.hpp>
 
 #include <algorithm>

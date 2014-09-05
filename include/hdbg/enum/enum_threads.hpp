@@ -1,7 +1,7 @@
 #ifndef __HDBG_ENUM_ENUM_THREADS_HPP__
 #define __HDBG_ENUM_ENUM_THREADS_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/hdbg.hpp>
 #include <hdbg/sys_types.hpp>
 
 #include <boost/iterator/iterator_facade.hpp>

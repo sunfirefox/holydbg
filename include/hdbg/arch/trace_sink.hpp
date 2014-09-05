@@ -1,7 +1,7 @@
 #ifndef __HDBG_ARCH_TRACE_SINK_HPP__
 #define __HDBG_ARCH_TRACE_SINK_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/hdbg.hpp>
 
 #include <cstdint>
 

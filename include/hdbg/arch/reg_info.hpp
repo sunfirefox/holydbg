@@ -1,6 +1,8 @@
 #ifndef __HDBG_ARCH_REG_INFO_HPP__
 #define __HDBG_ARCH_REG_INFO_HPP__
 
+#include <hdbg/hdbg.hpp>
+
 #include <vector>
 
 namespace hdbg {

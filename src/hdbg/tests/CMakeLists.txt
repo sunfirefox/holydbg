@@ -10,10 +10,11 @@ set(hdbg_tests
       tracer
       runner )
 
+add_executable(dummy_exec dummy_exec.cc)
+
 foreach(test ${hdbg_tests})
   add_executable(${test}_unittest ${test}_unittest.cc)
   target_link_libraries(${test}_unittest gtest gtest_main hdbg)
   add_test(NAME ${test} COMMAND ${test}_unittest)
 endforeach()
 
-add_executable(dummy_exec dummy_exec.cc)

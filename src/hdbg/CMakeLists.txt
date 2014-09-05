@@ -23,6 +23,8 @@ if(Boost_FOUND)
   unit_add_link_deps(lib_hdbg ${Boost_LIBRARIES} gmp)
 endif()
 
+unit_add_sources(lib_hdbg hdbg.cc)
+
 add_subdirectory(arch)
 add_subdirectory(binfmt)
 add_subdirectory(dbg)

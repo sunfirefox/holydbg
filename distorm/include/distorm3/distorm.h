@@ -26,7 +26,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef DISTORM3_DISTORM_H
 #define DISTORM3_DISTORM_H
 
-#include <distorm3/config.h>
+/* diStorm version number. */
+#define DISTORM_VERSION 0x030300
+
+#include <distorm3/distorm_conf.h>
+#include <distorm3/distorm_dll.h>
+
+#include <stdint.h>
+#include <string.h> /* memset, memcpy - can be easily self implemented for libc independency. */
+
+#ifdef DISTORM_SUPPORT_64BIT_OFFSET
+  typedef uint64_t OFFSET_INTEGER;
+#else
+  typedef unsigned long OFFSET_INTEGER;
+#endif
 
 /* Support C++ compilers */
 #ifdef __cplusplus
@@ -47,7 +60,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define INSTRUCTION_GET_RIP_TARGET(di) ((D3_OffsetType)(((di)->addr + (di)->disp + (di)->size)))
 
 /*
- * Operand Size or Adderss size are stored inside the flags:
+ * Operand Size or Address size are stored inside the flags:
  * 00 - 16 bits
  * 01 - 32 bits
  * 10 - 64 bits

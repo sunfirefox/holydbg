@@ -1,7 +1,7 @@
 #ifndef __HDBG_DBG_DEBUG_PROCESS_HPP__
 #define __HDBG_DBG_DEBUG_PROCESS_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/hdbg.hpp>
 #include <hdbg/sys_types.hpp>
 
 #include <cstddef>

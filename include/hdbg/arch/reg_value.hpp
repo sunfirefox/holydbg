@@ -1,7 +1,7 @@
 #ifndef __HDBG_ARCH_REG_VALUE_HPP__
 #define __HDBG_ARCH_REG_VALUE_HPP__
 
-#include <hdbg/arch/endian.hpp>
+#include <hdbg/hdbg.hpp>
 
 #include <boost/multiprecision/gmp.hpp>
 

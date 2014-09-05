@@ -25,15 +25,28 @@ ArchServices & process_arch_services(const DebugProcess & dbg_proc)
 
 } // namespace
 
+class HwBreakpoint::HwBpxDbgEvtListener final
+  : public DebugEventListener
+{
+public:
+  HwBpxDbgEvtListener(HwBreakpoint &);
+  
+  virtual void on(const ThreadCreatedEvent &) override;
+  virtual void on(const ThreadExitedEvent &) override;
+  
+private:
+  HwBreakpoint & hw_bpx_;
+};
+
 HwBreakpoint::HwBpxDbgEvtListener::HwBpxDbgEvtListener(HwBreakpoint & hw_bpx)
   : hw_bpx_( hw_bpx ) {}
 
-void HwBreakpoint::HwBpxDbgEvtListener::handle_event(const ThreadCreatedEvent & dbg_evt)
+void HwBreakpoint::HwBpxDbgEvtListener::on(const ThreadCreatedEvent & dbg_evt)
 {
   hw_bpx_.set_on_thread(*dbg_evt.new_thread);
 }
 
-void HwBreakpoint::HwBpxDbgEvtListener::handle_event(const ThreadExitedEvent & dbg_evt)
+void HwBreakpoint::HwBpxDbgEvtListener::on(const ThreadExitedEvent & dbg_evt)
 {
   hw_bpx_.remove_from_thread(*dbg_evt.thread);
 }

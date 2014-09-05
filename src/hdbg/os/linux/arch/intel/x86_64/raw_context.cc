@@ -1,8 +1,8 @@
+#include "../../../../../arch/endian.hpp"
 #include "../../../../../arch/intel/x86_64/raw_context.hpp"
 #include "../../../../../arch/intel/x86_64/reg_ids.hpp"
 
 #include <hdbg/binary_format.hpp>
-#include <hdbg/arch/endian.hpp>
 #include <hdbg/dbg/debug_process.hpp>
 #include <hdbg/dbg/thread_context.hpp>
 #include <hdbg/dbg/local/debug_thread.hpp>

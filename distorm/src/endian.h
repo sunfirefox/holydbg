@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef ENDIAN_H
 #define ENDIAN_H
 
-#include <distorm3/config.h>
+#include "config.h"
 
 #ifdef DISTORM_BE_SYSTEM
 

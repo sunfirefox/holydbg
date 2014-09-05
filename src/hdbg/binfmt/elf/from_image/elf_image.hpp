@@ -2,9 +2,9 @@
 #define __HDBG_SRC_BINFMT_ELF_FROM_IMAGE_ELF_IMAGE_HPP__
 
 #include "../elf.hpp"
+#include "../../../arch/endian.hpp"
 
 #include <hdbg/binary_format.hpp>
-#include <hdbg/arch/endian.hpp>
 #include <hdbg/dbg/debug_process.hpp>
 
 #include <algorithm>

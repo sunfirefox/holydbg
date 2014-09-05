@@ -1,7 +1,7 @@
 #ifndef __HDBG_DBG_BREAKPOINT_HPP__
 #define __HDBG_DBG_BREAKPOINT_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/hdbg.hpp>
 #include <hdbg/dbg/debug_event.hpp>
 
 namespace hdbg {

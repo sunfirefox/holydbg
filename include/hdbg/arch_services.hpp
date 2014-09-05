@@ -1,7 +1,7 @@
 #ifndef __HDBG_ARCH_SERVICES_HPP__
 #define __HDBG_ARCH_SERVICES_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/hdbg.hpp>
 #include <hdbg/arch/reg_info.hpp>
 #include <hdbg/arch/reg_value.hpp>
 

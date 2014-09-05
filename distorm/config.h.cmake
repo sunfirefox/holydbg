@@ -20,146 +20,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef DISTORM_CONFIG_H
-#define DISTORM_CONFIG_H
+#ifndef DISTORM_SRC_CONFIG_H
+#define DISTORM_SRC_CONFIG_H
 
-/* diStorm version number. */
-#define DISTORM_VERSION @distorm_VERSION@
-
-#include <string.h> /* memset, memcpy - can be easily self implemented for libc independency. */
-
-/*
- * If you compile diStorm as a dynamic library (.dll or .so) file, make sure you uncomment the next line.
- * So the interface functions will be exported, otherwise they are useable only for static library.
- * For example, this macro is being set for compiling diStorm as a .dll for Python with CTypes.
+/* WARNING: This file is for internal use only. It contains internal compile-time settings
+ * that are needed to ensure cross-platform compatibility of distorm.
  */
-#cmakedefine DISTORM_STATIC
-
-/*
- * 64 bit offsets support:
- * This macro should be defined from compiler command line flags, e.g: -DSUPPORT_64BIT_OFFSET
- * Note: make sure that the caller (library user) defines it too!
- */
-#cmakedefine DISTORM_SUPPORT_64BIT_OFFSET
-
-/*
- * If DISTORM_DISABLE_FORMAT_CAPABILITIES is defined, everything involved in
- * formatting the instructions as text will be excluded from compilation.
- * distorm_decode(..) and distorm_format(..) will not be available.
- * This will decrease the size of the executable and leave you with decomposition functionality only.
- */
-#cmakedefine DISTORM_DISABLE_FORMAT_CAPABILITIES
-
-/*
- * If DISTORM_DISABLE_BACKWARD_COMPATIBILITY is defined, all workarounds to
- * maintain backward compatibility will be disabled. Use it if you don't need
- * compatibility with legacy versions of distorm.
- */
-#cmakedefine DISTORM_DISABLE_BACKWARD_COMPATIBILITY
-
-/* If DISTORM_LIGHT is defined, all the options above will take place */
-#cmakedefine DISTORM_LIGHT
-#ifdef DISTORM_LIGHT
-  #define DISTORM_DISABLE_BACKWARD_COMPATIBILITY
-  #define DISTORM_DISABLE_FORMAT_CAPABILITIES
-#endif
-
-#cmakedefine DISTORM_CC_MSVC
-#cmakedefine DISTORM_CC_GNU
-#cmakedefine DISTORM_CC_CLANG
-#cmakedefine DISTORM_CC_INTEL
-#cmakedefine DISTORM_CC_TINYCC
-#cmakedefine DISTORM_CC_WATCOM
-#cmakedefine DISTORM_CC_UNKNOWN
 
 /*
  * diStorm now supports little/big endian CPU's.
  */
-#cmakedefine DISTORM_ENDIAN_BE
+#cmakedefine DISTORM_BE_SYSTEM
 
-#cmakedefine DISTORM_HAVE_STDINT_H
-#ifdef DISTORM_HAVE_STDINT_H
-  #include <stdint.h>
-#endif
-
-/* These macros are used in order to make the code portable. */
-#if defined( DISTORM_CC_GNU ) || defined( DISTORM_CC_CLANG )
-  
-  #define DISTORM_DLLEXPORT __attribute__((visibility("default")))
-  #define DISTORM_DLLIMPORT __attribute__((visibility("default")))
-  
-  #define DISTORM_FASTCALL  /* __attribute__((fastcall)) */
-  #define DISTORM_INLINE    static inline
-  
-#elif defined( DISTORM_CC_MSVC )
-  
-  #define DISTORM_DLLEXPORT __declspec(dllexport)
-  #define DISTORM_DLLIMPOR  __declspec(dllimport)
-  #define DISTORM_FASTCALL  __fastcall
-  #define DISTORM_INLINE    __inline
-  
-  #ifndef DISTORM_HAVE_STDINT_H
-    typedef signed    __int64 int64_t;
-    typedef unsigned  __int64 uint64_t;
-    typedef signed    __int32 int32_t;
-    typedef unsigned  __int32 uint32_t;
-    typedef signed    __int16 int16_t;
-    typedef unsigned  __int16 uint16_t;
-    typedef signed    __int8  int8_t;
-    typedef unsigned  __int8  uint8_t;
-  #endif /* DISTORM_HAVE_STDINT_H */
-  
-#elif defined( DISTORM_CC_WATCOM )
-  
-  #define DISTORM_DLLEXPORT
-  #define DISTORM_DLLIMPORT
-  #define DISTORM_FASTCALL
-  #define DISTORM_INLINE __inline
-  
-#elif defined( DISTORM_CC_TINYCC )
-  
-  #define DISTORM_DLLEXPORT
-  #define DISTORM_DLLIMPORT
-  #define DISTORM_FASTCALL
-  #define DISTORM_INLINE
-  
-  /* TINYC has a problem with some 64bits library functions, so ignore 64 bit offsets. */
-  #undef DISTORM_SUPPORT_64BIT_OFFSET
-  
-#elif defined( __DMC__ )
-  
-  #define DISTORM_DLLEXPORT
-  #define DISTORM_DLLIMPORT
-  #define DISTORM_FASTCALL
-  #define DISTORM_INLINE __inline
-  
-#else
-  
-  #define DISTORM_DLLEXPORT
-  #define DISTORM_DLLIMPORT
-  #define DISTORM_FASTCALL
-  #define DISTORM_INLINE
-  
-#endif
-
-#ifdef DISTORM_SUPPORT_64BIT_OFFSET
-  typedef uint64_t OFFSET_INTEGER;
-#else /* 32 bit offsets are used. */
-  typedef unsigned long OFFSET_INTEGER;
-#endif
-
-/* If the library isn't compiled as a dynamic library don't export any functions. */
-#ifdef DISTORM_STATIC
-  #define DISTORM_EXPORT
-#else
-  #ifdef distorm3_EXPORTS
-    #define DISTORM_EXPORT DISTORM_DLLEXPORT
-  #else
-    #define DISTORM_EXPORT DISTORM_DLLIMPORT
-  #endif
-#endif
+#cmakedefine HAVE_STDINT_H
 
 #define DISTORM_FALSE 0
 #define DISTORM_TRUE  1
 
-#endif /* DISTORM_CONFIG_H */
+#endif /* DISTORM_SRC_CONFIG_H */

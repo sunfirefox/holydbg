@@ -5,8 +5,6 @@
 
 #include <memory>
 
-namespace {
-
 struct FooEvent {};
 struct BarEvent {};
 
@@ -16,57 +14,59 @@ class FooBarListener final
   : public hdbg::EventListener<FooEvent, BarEvent>
 {
 public:
-  FooBarListener() : called_( false ) {}
-  virtual ~FooBarListener() = default;
+  FooBarListener();
+  virtual ~FooBarListener();
   
-  bool called() const
-  {
-    return called_;
-  }
-  
-  void reset()
-  {
-    called_ = false;
-  }
-  
-private:
-  virtual void handle_event(const FooEvent & ) override
-  {
-    called_ = true;
-  }
-  
-  virtual void handle_event(const BarEvent & ) override
-  {
-    called_ = true;
-  }
+  virtual void on(const FooEvent & evt) override;
+  virtual void on(const BarEvent & evt) override;
   
   bool called_;
 };
 
-} // namespace
+class EventTest
+  : public ::testing::Test
+{
+public:
+  EventTest();
+  virtual ~EventTest();
+  
+  FooBarEmitter emitter_;
+  std::shared_ptr<FooBarListener> listener_;
+};
 
-TEST(EventTest, AddEventListener) {
-  FooBarEmitter emitter;
-  auto listener = std::make_shared<FooBarListener>();
-  emitter.add_listener(listener);
+EventTest::EventTest()
+  : listener_( std::make_shared<FooBarListener>() ) {}
+
+EventTest::~EventTest() = default;
+
+TEST_F(EventTest, AddEventListener) {
+  emitter_.add_listener(listener_);
+  emitter_.emit_event(FooEvent{});
+  EXPECT_TRUE(listener_->called_);
   
-  emitter.emit_event(FooEvent{});
-  ASSERT_TRUE(listener->called());
-  
-  listener->reset();
-  ASSERT_FALSE(listener->called());
-  
-  emitter.emit_event(BarEvent{});
-  EXPECT_TRUE(listener->called());
+  listener_->called_ = false;
+  emitter_.emit_event(BarEvent{});
+  EXPECT_TRUE(listener_->called_);
 }
 
-TEST(EventTest, RemoveEventListener) {
-  FooBarEmitter emitter;
-  auto listener = std::make_shared<FooBarListener>();
-  emitter.add_listener(listener);
-  emitter.remove_listener(listener);
-  
-  emitter.emit_event(FooEvent{});
-  ASSERT_FALSE(listener->called());
+TEST_F(EventTest, RemoveEventListener) {
+  emitter_.add_listener(listener_);
+  emitter_.remove_listener(listener_);
+  emitter_.emit_event(FooEvent{});
+  EXPECT_FALSE(listener_->called_);
 }
 
+FooBarListener::FooBarListener()
+  : called_( false ) {}
+
+FooBarListener::~FooBarListener() = default;
+
+void FooBarListener::on(const FooEvent & )
+{
+  called_ = true;
+}
+
+void FooBarListener::on(const BarEvent & )
+{
+  called_ = true;
+}

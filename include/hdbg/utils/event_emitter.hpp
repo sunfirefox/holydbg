@@ -33,6 +33,22 @@ private:
   mutable std::vector<std::weak_ptr<EventListener<Events...>>> listeners_;
 };
 
+namespace detail {
+
+template <typename Type>
+constexpr bool type_in()
+{
+  return false;
+}
+
+template <typename Type, typename T, typename... Ts>
+constexpr bool type_in()
+{
+  return std::is_same<Type, T>::value || type_in<Type, Ts...>();
+}
+
+} // namespace detail
+
 template <class... Events>
 void EventEmitter<Events...>::add_listener(std::shared_ptr<EventListener<Events...>> sp_listener)
 {

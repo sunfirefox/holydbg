@@ -17,19 +17,6 @@ class DebugThread;
 class HDBG_API HwBreakpoint final
   : public Breakpoint
 {
-  class HwBpxDbgEvtListener final
-    : public DebugEventListener
-  {
-  public:
-    HwBpxDbgEvtListener(HwBreakpoint &);
-    
-  private:
-    virtual void handle_event(const ThreadCreatedEvent &) override;
-    virtual void handle_event(const ThreadExitedEvent &) override;
-    
-    HwBreakpoint & hw_bpx_;
-  };
-  
 public:
   HwBreakpoint(std::uintptr_t addr);
   virtual ~HwBreakpoint();
@@ -43,6 +30,8 @@ public:
 private:
   void set_on_thread(DebugThread &);
   void remove_from_thread(DebugThread &);
+  
+  class HwBpxDbgEvtListener;
   
   struct HwBpxData
   {

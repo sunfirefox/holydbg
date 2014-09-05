@@ -1,7 +1,7 @@
 #ifndef __HDBG_THIS_PROCESS_HPP__
 #define __HDBG_THIS_PROCESS_HPP__
 
-#include <hdbg/config.h>
+#include <hdbg/hdbg.hpp>
 #include <hdbg/sys_types.hpp>
 
 namespace hdbg { namespace this_process {

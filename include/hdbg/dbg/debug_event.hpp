@@ -1,6 +1,7 @@
 #ifndef __HDBG_DBG_DEBUG_EVENT_HPP__
 #define __HDBG_DBG_DEBUG_EVENT_HPP__
 
+#include <hdbg/hdbg.hpp>
 #include <hdbg/sys_types.hpp>
 #include <hdbg/utils/event_emitter.hpp>
 #include <hdbg/utils/event_listener.hpp>

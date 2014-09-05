@@ -462,7 +462,6 @@ std::unique_ptr<LocalDebuggee>
     
     if(pid == 0)
       ptrace_child_stub(child_cwd, child_argv, child_envp);
-    
     return pid;
   });
   

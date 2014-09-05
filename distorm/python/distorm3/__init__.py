@@ -165,9 +165,9 @@ class _DInst (Structure):
         ('scale', c_ubyte),   # ignore for values 0, 1 (other valid values - 2,4,8)
         ('dispSize', c_ubyte),
         ('meta', c_ubyte), # meta flags - instruction set class, etc. See C headers again...
-        ('modifiedFlagsMask', c_uint16), # CPU modified (output) flags by instruction.
-        ('testedFlagsMask', c_uint16), # CPU tested (input) flags by instruction.
-        ('undefinedFlagsMask', c_uint16) # CPU undefined flags by instruction.
+        ('modifiedFlagsMask', c_ubyte), # CPU modified (output) flags by instruction.
+        ('testedFlagsMask', c_ubyte), # CPU tested (input) flags by instruction.
+        ('undefinedFlagsMask', c_ubyte) # CPU undefined flags by instruction.
         ]
 
 #==============================================================================
@@ -422,7 +422,7 @@ Mnemonics = {0x669: "SLDT", 0x62: "POPA", 0x8ee: "UNPCKHPS", 0x115: "POPF", 0x11
 0xcca: "VCVTPD2PS", 0x16f5: "VCMPTRUE_USSS", 0xc53: "VADDSD", 0x1daf: "PBLENDVB",
 0x6c9: "VMRESUME", 0xab6: "UCOMISD", 0x1f58: "PMOVZXWD", 0xa36: "CVTTPD2PI",
 0xaad: "UCOMISS", 0xe6b: "VPACKSSWB", 0xc4b: "VADDSS", 0xf9c: "PSHUFHW", 0x1887: "VCMPTRUE_USSD",
-0x6e4: "MWAIT",
+0x6e4: "MWAIT"
 }
 
 Registers = ["RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
@@ -441,6 +441,7 @@ Registers = ["RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "R8", "R9",
 
 # Special case
 R_NONE = 0xFF # -1 in uint8
+
 
 FLAGS = [
 # The instruction locks memory access.
@@ -668,7 +669,7 @@ def _getFC(metaflags):
     try:
         return FlowControlFlags[realvalue]
     except IndexError:
-        print ("Bad meta-flags: %d", realvalue)
+        print "Bad meta-flags: %d", realvalue
         raise
 
 def _getMnem(opcode):
@@ -899,9 +900,8 @@ def DecomposeGenerator(codeOffset, code, dt, features = 0):
         codeOffset = codeOffset + delta
         p_code     = byref(code_buf, instruction_off)
         codeLen    = codeLen - delta
-        
-        if (features & DF_STOP_ON_FLOW_CONTROL) != 0:
-            break # User passed a stop flag.
+	if (features & DF_STOP_ON_FLOW_CONTROL) != 0:
+		break # User passed a stop flag.
 
 def Decompose(offset, code, type = Decode32Bits, features = 0):
     """

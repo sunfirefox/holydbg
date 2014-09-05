@@ -14,10 +14,10 @@
 *.exe
 *.out
 
-tests/**
-
 build/**
+tests/**
 distorm/build/**
 
-include/hdbg/config.h
-distorm/include/distorm3/config.h
+src/config.h
+distorm/src/config.h
+distorm/include/distorm3/distorm_conf.h
