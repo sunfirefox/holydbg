@@ -13,7 +13,6 @@ public:
   virtual ~X64_ArchServices();
   
   virtual const RegInfo & reg_info(unsigned int reg_idx) const override;
-  virtual const std::vector<RegCategoryInfo> & reg_categories() const override;
   
   virtual RegValue get_inst_ptr(const ThreadContext & thr_ctx) const override;
   virtual void set_inst_ptr(ThreadContext & thr_ctx, const RegValue & rv) const override;

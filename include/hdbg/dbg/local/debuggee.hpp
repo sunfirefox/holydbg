@@ -4,7 +4,6 @@
 #include <hdbg/sys_types.hpp>
 #include <hdbg/dbg/debuggee.hpp>
 #include <hdbg/dbg/debug_event.hpp>
-#include <hdbg/dbg/breakpoint_manager.hpp>
 #include <hdbg/dbg/local/debug_process.hpp>
 #include <hdbg/dbg/local/debug_thread.hpp>
 
@@ -32,7 +31,7 @@ public:
   virtual bool attached() const override;
   
   virtual void singlestep(DebugThread &) override;
-  virtual void run_until_next_event() override;
+  virtual void run() override;
   
   virtual void detach() override;
   virtual void kill() override;
@@ -50,9 +49,6 @@ public:
 private:
   LocalDebuggee(process_id pid);
   LocalDebuggee(const LocalDebuggee & parent, process_id pid);
-  
-  BreakpointManager bp_mgr_;
-  DebugEventEmitter evt_emitter_;
   
   class Impl;
   std::unique_ptr<Impl> pimpl_;

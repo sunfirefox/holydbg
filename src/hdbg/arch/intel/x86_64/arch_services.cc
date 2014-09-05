@@ -46,41 +46,6 @@ X64_ArchServices x64_services;
 X64_ArchServices::X64_ArchServices() = default;
 X64_ArchServices::~X64_ArchServices() = default;
 
-const std::vector<RegCategoryInfo> & X64_ArchServices::reg_categories() const
-{
-  static const std::vector<RegCategoryInfo> x64_reg_categories = {
-    { "General purpose registers",
-       { X64_RegRax, X64_RegRbx ,
-         X64_RegRcx, X64_RegRdx ,
-         X64_RegRsi, X64_RegRdi ,
-         X64_RegRbp, X64_RegRsp ,
-         X64_RegR8 , X64_RegR9  ,
-         X64_RegR10, X64_RegR11 ,
-         X64_RegR12, X64_RegR13 ,
-         X64_RegR14, X64_RegR15 ,
-         X64_RegRip, X64_RegRflags }
-    },
-    { "Segment registers",
-       { X64_SegCs, X64_SegSs ,
-         X64_SegDs, X64_SegEs ,
-         X64_SegFs, X64_SegGs }
-    },
-    { "Fpu registers",
-       { X64_RegSt0, X64_RegSt1 ,
-         X64_RegSt2, X64_RegSt3 ,
-         X64_RegSt4, X64_RegSt5 ,
-         X64_RegSt6, X64_RegSt7 }
-    },
-    { "Debug registers",
-       { X64_RegDr0, X64_RegDr1 ,
-         X64_RegDr2, X64_RegDr3 ,
-         X64_RegDr4, X64_RegDr5 ,
-         X64_RegDr6, X64_RegDr7 }
-    }
-  };
-  return x64_reg_categories;
-}
-
 const RegInfo & X64_ArchServices::reg_info(unsigned int reg_idx) const
 {
   static const RegInfo * reg_info_table[] = {
@@ -163,8 +128,6 @@ void X64_ArchServices::set_flag(ThreadContext & thr_ctx, unsigned int flg_idx,
   thr_ctx.set_reg(X64_RegRflags, rflags);
 }
 
-namespace {
-
 struct RunTraceArgs
 {
   TraceSink * tracer;
@@ -173,6 +136,8 @@ struct RunTraceArgs
   std::size_t len;
   std::vector<std::uintptr_t> * code_paths;
 };
+
+namespace {
 
 void trace_code_path(const RunTraceArgs & rt_args, void * parent_block, std::uintptr_t vaddr,
                      const void * data, std::size_t len);

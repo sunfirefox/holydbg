@@ -1,5 +1,5 @@
-#ifndef __HDBG_DBG_BREAKPOINT_MANAGER_HPP__
-#define __HDBG_DBG_BREAKPOINT_MANAGER_HPP__
+#ifndef __HDBG_SRC_DBG_BREAKPOINT_MANAGER_HPP__
+#define __HDBG_SRC_DBG_BREAKPOINT_MANAGER_HPP__
 
 #include <hdbg/dbg/breakpoint.hpp>
 #include <hdbg/dbg/debuggee.hpp>
@@ -49,4 +49,4 @@ private:
 
 } // namespace hdbg
 
-#endif // __HDBG_DBG_BREAKPOINT_MANAGER_HPP__
+#endif // __HDBG_SRC_DBG_BREAKPOINT_MANAGER_HPP__

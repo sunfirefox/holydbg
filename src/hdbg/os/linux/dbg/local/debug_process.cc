@@ -1,5 +1,7 @@
 #include <hdbg/dbg/local/debug_process.hpp>
 
+#include "pt_runner.hpp"
+
 #include <hdbg/binfmt/from_image.hpp>
 #include <hdbg/enum/enum_mempages.hpp>
 

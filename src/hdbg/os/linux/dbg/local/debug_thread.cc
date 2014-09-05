@@ -1,5 +1,7 @@
 #include <hdbg/dbg/local/debug_thread.hpp>
 
+#include "pt_runner.hpp"
+
 #include <hdbg/dbg/thread_context.hpp>
 #include <hdbg/dbg/local/debug_process.hpp>
 
@@ -40,12 +42,16 @@ thread_id LocalDebugThread::id() const
 
 void LocalDebugThread::get_context(ThreadContext & thr_ctx) const
 {
-  thr_ctx.obtain_from(*this);
+  pt_runner.run([this, &thr_ctx] {
+    thr_ctx.obtain_from(*this);
+  });
 }
 
 void LocalDebugThread::set_context(const ThreadContext & thr_ctx)
 {
-  thr_ctx.apply_to(*this);
+  pt_runner.run([this, &thr_ctx] {
+    thr_ctx.apply_to(*this);
+  });
 }
 
 void * LocalDebugThread::nativeHandle()

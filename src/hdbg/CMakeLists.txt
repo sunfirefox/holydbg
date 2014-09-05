@@ -27,6 +27,7 @@ add_subdirectory(arch)
 add_subdirectory(binfmt)
 add_subdirectory(dbg)
 add_subdirectory(os)
+add_subdirectory(utils)
 
 if(LIBHDBG_STATIC)
   set(lib_hdbg_linkage STATIC)

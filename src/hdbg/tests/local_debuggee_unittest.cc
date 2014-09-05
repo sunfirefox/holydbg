@@ -41,7 +41,7 @@ LocalDebuggeeTest::~LocalDebuggeeTest()
 }
 
 TEST_F(LocalDebuggeeTest, DbgExecRun) {
-  ASSERT_NO_THROW( debuggee_->run() );
+  debuggee_->run();
 }
 
 TEST_F(LocalDebuggeeTest, SetSwBpx) {

@@ -43,7 +43,8 @@ ThreadContextTest::~ThreadContextTest()
 }
 
 TEST_F(ThreadContextTest, BasicRegValue) {
-  ASSERT_EQ(0xdeadbeef, thr_ctx_.reg_value(0));
+  const hdbg::RegValue rv = thr_ctx_.reg_value(0);
+  ASSERT_EQ(0xdeadbeef, rv);
 }
 
 TEST_F(ThreadContextTest, CopyOnWrite) {

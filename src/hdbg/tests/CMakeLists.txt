@@ -7,7 +7,8 @@ set(hdbg_tests
       binfmt_img
       local_debuggee
       thr_ctx
-      tracer )
+      tracer
+      runner )
 
 foreach(test ${hdbg_tests})
   add_executable(${test}_unittest ${test}_unittest.cc)

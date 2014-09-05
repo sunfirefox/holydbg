@@ -21,7 +21,6 @@ public:
   virtual ~ArchServices() = default;
   
   virtual const RegInfo & reg_info(unsigned int reg_idx) const  = 0;
-  virtual const std::vector<RegCategoryInfo> & reg_categories() const = 0;
   
   virtual RegValue get_inst_ptr(const ThreadContext & thr_ctx) const = 0;
   virtual void set_inst_ptr(ThreadContext & thr_ctx, const RegValue & rv) const = 0;

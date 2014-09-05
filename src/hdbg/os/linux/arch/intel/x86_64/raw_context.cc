@@ -24,7 +24,7 @@ namespace {
 RegValue read_st_reg(const unsigned int * st_ptr)
 {
   RegValue rv;
-  const std::size_t sizeof_reg_st = 32;
+  const std::size_t sizeof_reg_st = sizeof(detail::x64_user_fpregs_struct::st_space);
   const unsigned int reg_st_uint_entries = sizeof_reg_st / sizeof(unsigned int);
   for(int i = 0; i < reg_st_uint_entries; ++i) {
     rv += st_ptr[i];
@@ -33,12 +33,10 @@ RegValue read_st_reg(const unsigned int * st_ptr)
   return rv;
 }
 
-#if false
 void write_st_reg(unsigned int * st_ptr, const RegValue & rv)
 {
 
 }
-#endif
 
 } // namespace
 
@@ -134,6 +132,7 @@ RegValue X64_RawContext::reg_value(unsigned int reg_idx) const
     case X64_SegFs:  return usr_regs_.fs;
     case X64_SegGs:  return usr_regs_.gs;
     
+#if false
     case X64_RegSt0: return read_st_reg(&usr_fpregs_.st_space[0 * 4]);
     case X64_RegSt1: return read_st_reg(&usr_fpregs_.st_space[1 * 4]);
     case X64_RegSt2: return read_st_reg(&usr_fpregs_.st_space[2 * 4]);
@@ -142,6 +141,7 @@ RegValue X64_RawContext::reg_value(unsigned int reg_idx) const
     case X64_RegSt5: return read_st_reg(&usr_fpregs_.st_space[5 * 4]);
     case X64_RegSt6: return read_st_reg(&usr_fpregs_.st_space[6 * 4]);
     case X64_RegSt7: return read_st_reg(&usr_fpregs_.st_space[7 * 4]);
+#endif
     
     case X64_RegDr0: return u_debugreg_[0];
     case X64_RegDr1: return u_debugreg_[1];

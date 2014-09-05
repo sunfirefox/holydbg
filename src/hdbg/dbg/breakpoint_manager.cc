@@ -1,4 +1,4 @@
-#include <hdbg/dbg/breakpoint_manager.hpp>
+#include "breakpoint_manager.hpp"
 
 #include <hdbg/dbg/debug_thread.hpp>
 #include <hdbg/dbg/thread_context.hpp>
