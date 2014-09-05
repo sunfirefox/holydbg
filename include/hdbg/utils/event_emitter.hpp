@@ -1,6 +1,7 @@
 #ifndef __HDBG_UTILS_EVENT_EMITTER_HPP__
 #define __HDBG_UTILS_EVENT_EMITTER_HPP__
 
+#include <hdbg/utils/type_list.hpp>
 #include <hdbg/utils/event_listener.hpp>
 
 #include <algorithm>
@@ -33,22 +34,6 @@ private:
   mutable std::vector<std::weak_ptr<EventListener<Events...>>> listeners_;
 };
 
-namespace detail {
-
-template <typename Type>
-constexpr bool type_in()
-{
-  return false;
-}
-
-template <typename Type, typename T, typename... Ts>
-constexpr bool type_in()
-{
-  return std::is_same<Type, T>::value || type_in<Type, Ts...>();
-}
-
-} // namespace detail
-
 template <class... Events>
 void EventEmitter<Events...>::add_listener(std::shared_ptr<EventListener<Events...>> sp_listener)
 {
@@ -68,7 +53,7 @@ void EventEmitter<Events...>::remove_listener(const std::shared_ptr<EventListene
 template <class... Events> template <class Event>
 void EventEmitter<Events...>::emit_event(const Event & event) const
 {
-  static_assert( detail::type_in<Event, Events...>(), "invalid event type");
+  static_assert( type_in<Event, Events...>(), "invalid event type");
   
   listeners_.erase(std::remove_if(listeners_.begin(), listeners_.end(),
     [&event](std::weak_ptr<EventListener<Events...>>& wp_listener)

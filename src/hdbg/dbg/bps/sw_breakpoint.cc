@@ -49,8 +49,8 @@ void SwBreakpoint::cleanup(Debuggee & debuggee)
 bool SwBreakpoint::match(const DebugThread & dbg_thr, const DebugEvent & dbg_evt,
                          const ThreadContext & thr_ctx) const
 {
-  if(dbg_evt.which() != UnknownEventId       &&
-     dbg_evt.which() != BreakpointHitEventId )
+  if(dbg_evt.which() != debug_event_index<UnknownEvent>()       &&
+     dbg_evt.which() != debug_event_index<BreakpointHitEvent>() )
   {
     return false;
   }

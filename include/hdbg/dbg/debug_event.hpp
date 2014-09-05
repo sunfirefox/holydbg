@@ -3,6 +3,7 @@
 
 #include <hdbg/hdbg.hpp>
 #include <hdbg/sys_types.hpp>
+#include <hdbg/utils/type_list.hpp>
 #include <hdbg/utils/event_emitter.hpp>
 #include <hdbg/utils/event_listener.hpp>
 
@@ -81,7 +82,24 @@ struct IllegalInstructionEvent
   DebugThread * thread;
 };
 
-typedef boost::variant
+namespace detail {
+
+template <class... Events>
+struct define_event_unit
+{
+  typedef EventEmitter<Events...> emitter;
+  typedef EventListener<Events...> listener;
+  typedef boost::variant<Events...> variant;
+  
+  template <typename Event>
+  struct event_index
+  {
+    static_assert(type_in<Event, Events...>(), "invalid event type");
+    enum { value = type_index<Event, Events...>() };
+  };
+};
+
+using DebugEventUnit = define_event_unit
 <
   UnknownEvent,
   ProcessCreatedEvent,
@@ -94,51 +112,19 @@ typedef boost::variant
   AccessViolationEvent,
   FloatingPointExceptionEvent,
   IllegalInstructionEvent
-> DebugEvent;
+>;
 
-enum {
-  UnknownEventId,
-  ProcessCreatedEventId,
-  ProcessExitedEventId,
-  ProcessKilledEventId,
-  ThreadCreatedEventId,
-  ThreadExitedEventId,
-  BreakpointHitEventId,
-  SinglestepEventId,
-  AccessViolationEventId,
-  FloatingPointExceptionEventId,
-  IllegalInstructionEventId
-} DebugEventId;
+} // namespace detail
 
-typedef EventListener
-<
-  UnknownEvent,
-  ProcessCreatedEvent,
-  ProcessExitedEvent,
-  ProcessKilledEvent,
-  ThreadCreatedEvent,
-  ThreadExitedEvent,
-  BreakpointHitEvent,
-  SinglestepEvent,
-  AccessViolationEvent,
-  FloatingPointExceptionEvent,
-  IllegalInstructionEvent
-> DebugEventListener;
+typedef detail::DebugEventUnit::variant  DebugEvent;
+typedef detail::DebugEventUnit::emitter  DebugEventEmitter;
+typedef detail::DebugEventUnit::listener DebugEventListener;
 
-typedef EventEmitter
-<
-  UnknownEvent,
-  ProcessCreatedEvent,
-  ProcessExitedEvent,
-  ProcessKilledEvent,
-  ThreadCreatedEvent,
-  ThreadExitedEvent,
-  BreakpointHitEvent,
-  SinglestepEvent,
-  AccessViolationEvent,
-  FloatingPointExceptionEvent,
-  IllegalInstructionEvent
-> DebugEventEmitter;
+template <typename T>
+inline constexpr unsigned int debug_event_index()
+{
+  return detail::DebugEventUnit::event_index<T>::value;
+}
 
 } // namespace hdbg
 
