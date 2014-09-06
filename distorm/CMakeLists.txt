@@ -13,7 +13,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 include(BuildConfigH)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/distorm_conf.h.cmake
-               ${CMAKE_CURRENT_SOURCE_DIR}/include/distorm3/distorm_conf.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/distorm_config.h.cmake
+               ${CMAKE_CURRENT_SOURCE_DIR}/include/distorm3/distorm_config.h)
 
 add_subdirectory(src)

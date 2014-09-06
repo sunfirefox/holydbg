@@ -1,7 +1,7 @@
 /* diStorm3 3.3 */
 
 /*
-distorm_conf.h
+distorm_config.h
 
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
@@ -22,8 +22,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#ifndef DISTORM3_DISTORM_CONF_H
-#define DISTORM3_DISTORM_CONF_H
+#ifndef DISTORM3_DISTORM_CONFIG_H
+#define DISTORM3_DISTORM_CONFIG_H
 
 /* WARNING: This file contains compile-time settings, which should be configured via cmake.
  * These settings affect the behaviour and/or the interface of the library. Do not edit!
@@ -65,4 +65,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   #define DISTORM_DISABLE_FORMAT_CAPABILITIES
 #endif
 
-#endif /* DISTORM3_DISTORM_CONF_H */
+#endif /* DISTORM3_DISTORM_CONFIG_H */

@@ -400,9 +400,16 @@ std::string make_env_var(const std::string & var, const std::string & value)
   return oss.str();
 }
 
-void ptrace_child_stub [[noreturn]] (const char * cwd, char ** argv, char ** envp)
+struct RawExecParams
 {
-  if(::chdir(cwd) == -1)
+  const char * cwd;
+  char ** argv;
+  char ** envp;
+};
+
+void ptrace_child_stub [[noreturn]] (const RawExecParams & params)
+{
+  if(::chdir(params.cwd) == -1)
     std::exit(errno);
   
   if(::ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1)
@@ -411,7 +418,7 @@ void ptrace_child_stub [[noreturn]] (const char * cwd, char ** argv, char ** env
   if(::raise(SIGSTOP) != 0)
     std::exit(errno);
   
-  ::execve(argv[0], argv, envp);
+  ::execve(params.argv[0], params.argv, params.envp);
     std::exit(errno);
 }
 
@@ -420,6 +427,8 @@ void ptrace_child_stub [[noreturn]] (const char * cwd, char ** argv, char ** env
 std::unique_ptr<LocalDebuggee>
   LocalDebuggee::exec(const DbgExecParams & params, unsigned int flags)
 {
+  RawExecParams rep;
+  
   std::vector<std::string> child_args { params.file };
   std::vector<char *> child_args_p { &child_args.back()[0] };
   if(params.flags & DbgExecParams::Flags::HasArgs) {
@@ -429,9 +438,8 @@ std::unique_ptr<LocalDebuggee>
     }
   }
   child_args_p.push_back(nullptr);
-  char ** const child_argv = child_args_p.data();
+  rep.argv = child_args_p.data();
   
-  char ** child_envp = nullptr;
   std::vector<std::string> child_env_vars;
   std::vector<char *> child_env_var_p;
   if(params.flags & DbgExecParams::Flags::HasEnv) {
@@ -441,9 +449,9 @@ std::unique_ptr<LocalDebuggee>
       child_env_vars.emplace_back( std::move(env_var) );
     }
     child_env_var_p.push_back(nullptr);
-    child_envp = child_env_var_p.data();
+    rep.envp = child_env_var_p.data();
   } else {
-    child_envp = ::environ;
+    rep.envp = ::environ;
   }
   
   char child_cwd[PATH_MAX+1];
@@ -454,14 +462,15 @@ std::unique_ptr<LocalDebuggee>
   } else {
     ::getcwd(child_cwd, sizeof(child_cwd));
   }
+  rep.cwd = child_cwd;
   
-  const pid_t child_pid = pt_runner.run([&child_cwd, &child_argv, &child_envp] {
+  const pid_t child_pid = pt_runner.run([&rep] {
     const pid_t pid = ::fork();
     if(pid == -1)
       throw std::system_error(errno, std::system_category());
     
     if(pid == 0)
-      ptrace_child_stub(child_cwd, child_argv, child_envp);
+      ptrace_child_stub(rep);
     return pid;
   });
   
@@ -636,6 +645,16 @@ void LocalDebuggee::run()
     pimpl_->wait_event(evt);
     pimpl_->dispatch_event(*this, evt);
   }
+}
+
+void LocalDebuggee::pause()
+{
+  if(::kill(pimpl_->process_.id(), SIGSTOP) == -1)
+    throw std::system_error(errno, std::system_category());
+  
+  Impl::RawDebugEvent evt;
+  pimpl_->wait_event(evt);
+  pimpl_->dispatch_event(*this, evt);
 }
 
 void LocalDebuggee::detach()

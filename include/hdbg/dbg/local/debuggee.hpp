@@ -31,7 +31,14 @@ public:
   virtual bool attached() const override;
   
   virtual void singlestep(DebugThread &) override;
+  
+#if false
+  virtual void run(DebugThread &) override;
+  virtual void pause(DebugThread &) override;
+#endif
+  
   virtual void run() override;
+  virtual void pause() override;
   
   virtual void detach() override;
   virtual void kill() override;

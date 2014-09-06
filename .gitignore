@@ -20,4 +20,4 @@ distorm/build/**
 
 src/config.h
 distorm/src/config.h
-distorm/include/distorm3/distorm_conf.h
+distorm/include/distorm3/distorm_config.h

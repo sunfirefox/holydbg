@@ -42,7 +42,14 @@ public:
   
   virtual bool attached() const = 0;
   virtual void singlestep(DebugThread &) = 0;
+  
+#if false
+  virtual void run(DebugThread &) = 0;
+  virtual void pause(DebugThread &) = 0;
+#endif
+  
   virtual void run() = 0;
+  virtual void pause() = 0;
   
   virtual void detach() = 0;
   virtual void kill() = 0;

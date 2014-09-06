@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 /* diStorm version number. */
 #define DISTORM_VERSION 0x030300
 
-#include <distorm3/distorm_conf.h>
+#include <distorm3/distorm_config.h>
 #include <distorm3/distorm_dll.h>
 
 #include <stdint.h>
